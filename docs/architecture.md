@@ -5,7 +5,7 @@
 
 ## One deployable service
 
-Caddy terminates HTTPS and proxies to a Node 24 process. Node serves the packaged frontend, compressed geodata, a shared weather cache and account APIs. SQLite stores users, sessions and private spots in a persistent volume. There are no runtime npm dependencies.
+Caddy terminates HTTPS and proxies to a Node 24 process. Node serves the packaged frontend, compressed geodata, a shared weather cache and optional anonymous submission APIs. Saved places and sightings live in browser local storage. SQLite stores explicitly shared research snapshots and feature votes in a persistent volume; existing legacy users, sessions and private spots are preserved with their APIs disabled by default. There are no runtime npm dependencies.
 
 The frontend remains plain JavaScript and Leaflet. It discovers `/api/config`; on static hosts it falls back to bundled script envelopes. Both modes use the same species, scoring and weather modules. Geometry is fetched only for the visible region. Property indexes are loaded per selected canton, with a separate national overview.
 
@@ -29,4 +29,4 @@ Keep public observations separate from private notebook records. Add explicit pe
 
 ## Operational boundaries
 
-This release targets one modest server. SQLite WAL permits concurrent reads, but writes and spatial queries share a process. Large indexes are synchronous to load and can briefly block requests; cached normal use avoids repeated loads. Scaling beyond a small community should move spatial indexing and background work into dedicated services. Backups and server patching remain operator responsibilities. CI exercises data integrity, authorization, weather failure handling, container startup and database backup integrity.
+This release targets one modest server. SQLite WAL permits concurrent reads, but writes and spatial queries share a process. Large indexes are synchronous to load and can briefly block requests; cached normal use avoids repeated loads. Scaling beyond a small community should move spatial indexing and background work into dedicated services. Backups and server patching remain operator responsibilities. Local tests exercise data integrity, authorization, weather failure handling, container startup and database backup integrity.

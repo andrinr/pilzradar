@@ -66,7 +66,7 @@ The script downloads two public ZIP archives into `.cache/soil/`, extracts only 
 0–5 cm layers, and writes `data/soil/index.js` plus 1,088 compressed soil tiles.
 The bundles total about 40 MB; only the selected location's tile is fetched.
 The optional raw-raster lookup cache is limited to eight decoded tiles. The same files
-work through the backend, GitHub Pages and direct file previews. CI validates all
+work through the backend, GitHub Pages and direct file previews. Local tests validate all
 bundled pixels, interval ordering, lookup boundaries and the API allowlist.
 
 The derived soil bundles retain **CC BY-SA 4.0**. See
@@ -87,4 +87,4 @@ cells would not add terrain information. The detailed forest mask now uses swiss
 A future finer terrain model should use a finer national elevation source, then validate species responses;
 the new 25 m pH data is one genuine additional input toward that model.
 
-Run `node scripts/join_soil.cjs` after rebuilding any habitat indexes or local bundles. It is idempotent and reads only the committed soil rasters. CI verifies samples against the source grid.
+Run `node scripts/join_soil.cjs` after rebuilding any habitat indexes or local bundles. It is idempotent and reads only the committed soil rasters. Local tests verify samples against the source grid.

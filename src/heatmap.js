@@ -1,5 +1,5 @@
 (function () {
-  const stops=[[0,[106,85,135]],[25,[103,91,201]],[50,[42,176,166]],[75,[226,228,81]],[100,[244,57,135]]];
+  const stops=[[0,[0,70,49]],[25,[45,137,65]],[50,[146,199,31]],[75,[237,211,25]],[100,[239,91,53]]];
   window.SHROOMS_COLOR = score => {
     const value=Math.max(0,Math.min(100,score));
     const index=stops.findIndex(([stop])=>value<=stop);

@@ -1,5 +1,4 @@
-/* Species profiles shared by browser and API. See CONTRIBUTING.md.
-   Numeric preferences are provisional hypotheses, not fitted probabilities. */
+/* Cited habitat associations; numerical responses remain unvalidated. See docs/species-evidence.md. */
 window.SHROOMS_SPECIES = {
   "porcini": {
     "name": "Porcini",
@@ -390,6 +389,298 @@ window.SHROOMS_SPECIES = {
       {
         "title": "First Nature — Russula cyanoxantha",
         "url": "https://www.first-nature.com/fungi/russula-cyanoxantha.php"
+      }
+    ]
+  },
+  "summer_bolete": {
+    "name": "Summer bolete",
+    "local": "Sommersteinpilz",
+    "latin": "Boletus reticulatus",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 1,
+      "oak": 1,
+      "conifer": 0,
+      "other": 1
+    },
+    "canopy": null,
+    "note": "Broadleaf woodland association. Local fruiting thresholds are not validated.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Boletus reticulatus",
+        "url": "https://repository.naturalis.nl/pub/532229/PERS2008020001001.pdf"
+      }
+    ]
+  },
+  "bronze_bolete": {
+    "name": "Bronze bolete",
+    "local": "Bronzeröhrling",
+    "latin": "Boletus aereus",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 1,
+      "oak": 1,
+      "conifer": 0,
+      "other": 1
+    },
+    "canopy": null,
+    "note": "Broadleaf woodland association. Local fruiting thresholds are not validated.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Boletus aereus",
+        "url": "https://smartchampi.univ-rouen.fr/sites/smartchampi.univ-rouen.fr/files/atoms/files/boletus_aereus_juin2021.pdf"
+      }
+    ]
+  },
+  "pine_bolete": {
+    "name": "Pine bolete",
+    "local": "Kiefernsteinpilz",
+    "latin": "Boletus pinophilus",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 0,
+      "oak": 0,
+      "conifer": 1,
+      "other": 0
+    },
+    "requiredTree": "pine",
+    "canopy": null,
+    "note": "Mainly pine-associated. Missing pine data is omitted; rare alternative hosts are not modeled.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Boletus pinophilus",
+        "url": "https://repository.naturalis.nl/pub/532229/PERS2008020001001.pdf"
+      }
+    ]
+  },
+  "granulated_bolete": {
+    "name": "Granulated bolete",
+    "local": "Körnchenröhrling",
+    "latin": "Suillus granulatus",
+    "months": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "temp": null,
+    "host": {
+      "beech": 0,
+      "oak": 0,
+      "conifer": 1,
+      "other": 0
+    },
+    "requiredTree": "pine",
+    "canopy": null,
+    "note": "Mainly pine-associated. Missing pine data is omitted; rare alternative hosts are not modeled.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Suillus granulatus",
+        "url": "https://www.nhm2.uio.no/botanisk/bot-mus/sopp/fakta/fakt-28.htm"
+      }
+    ]
+  },
+  "bovine_bolete": {
+    "name": "Bovine bolete",
+    "local": "Kuhröhrling",
+    "latin": "Suillus bovinus",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 0,
+      "oak": 0,
+      "conifer": 1,
+      "other": 0
+    },
+    "requiredTree": "pine",
+    "canopy": null,
+    "note": "Mainly pine-associated. Missing pine data is omitted; rare alternative hosts are not modeled.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Suillus bovinus",
+        "url": "https://www.mycologen.nl/cooliasleutels/Coolia_43-2.pdf"
+      }
+    ]
+  },
+  "salmon_milkcap": {
+    "name": "Salmon milkcap",
+    "local": "Lachsreizker",
+    "latin": "Lactarius salmonicolor",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 0,
+      "oak": 0,
+      "conifer": 1,
+      "other": 0
+    },
+    "requiredTree": "fir",
+    "canopy": null,
+    "note": "Fir-associated woodland. Missing fir data is omitted.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Lactarius salmonicolor",
+        "url": "https://micosylva.pfcyl.es/sites/default/files/documentos/final_sylviculture_et_champignon_2015.pdf"
+      }
+    ]
+  },
+  "amethyst": {
+    "name": "Amethyst deceiver",
+    "local": "Violetter Lacktrichterling",
+    "latin": "Laccaria amethystina",
+    "months": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "temp": null,
+    "host": {
+      "beech": 1,
+      "oak": 1,
+      "conifer": 1,
+      "other": 1
+    },
+    "canopy": null,
+    "note": "Broadleaf and conifer woodland association. Leaf litter is not mapped.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry",
+      "Leaf litter"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Laccaria amethystina",
+        "url": "https://www.norfolkwildlifetrust.org.uk/wildlife-explorer/amethyst-deceiver"
+      }
+    ]
+  },
+  "vesca": {
+    "name": "The flirt",
+    "local": "Speisetäubling",
+    "latin": "Russula vesca",
+    "months": [
+      7,
+      8,
+      9,
+      10
+    ],
+    "temp": null,
+    "host": {
+      "beech": 1,
+      "oak": 1,
+      "conifer": 1,
+      "other": 1
+    },
+    "canopy": null,
+    "note": "Broadleaf and conifer woodland association. Leaf litter is not mapped.",
+    "unmapped": [
+      "Unvalidated fruiting thresholds",
+      "Soil chemistry"
+    ],
+    "sources": [
+      {
+        "title": "Ecological evidence — Russula vesca",
+        "url": "https://www.mycologen.nl/onderzoek/meetnet/bospaddenstoelen/typische-soorten/"
+      }
+    ]
+  },
+  "fly_agaric": {
+    "name": "Fly agaric",
+    "local": "Fliegenpilz",
+    "latin": "Amanita muscaria",
+    "months": null,
+    "temp": null,
+    "host": {
+      "beech": 1,
+      "oak": 1,
+      "conifer": 1,
+      "other": 1
+    },
+    "canopy": null,
+    "note": "Woodland with tree partners. Poisonous; observe rather than consume.",
+    "unmapped": [
+      "Individual host-tree distribution",
+      "Unvalidated fruiting thresholds"
+    ],
+    "sources": [
+      {
+        "title": "Woodland Trust — Fly agaric ecology",
+        "url": "https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/fly-agaric/"
+      },
+      {
+        "title": "CDC — Amanita muscaria intoxications",
+        "url": "https://www.cdc.gov/mmwr/volumes/68/wr/mm6821a4.htm"
+      }
+    ]
+  },
+  "liberty_cap": {
+    "name": "Liberty cap",
+    "local": "Spitzkegeliger Kahlkopf",
+    "latin": "Psilocybe semilanceata",
+    "mapping": false,
+    "months": null,
+    "temp": null,
+    "host": null,
+    "canopy": null,
+    "note": "Record sightings in your notebook. Our forest data cannot support a habitat score for this species.",
+    "unmapped": [
+      "Grassland habitat",
+      "Unvalidated fruiting thresholds"
+    ],
+    "sources": [
+      {
+        "title": "Habitat evidence — Psilocybe semilanceata",
+        "url": "https://mushrooms.linnaeus.naturalis.nl/linnaeus_ng/app/views/species/taxon.php?id=100290"
+      }
+    ]
+  },
+  "wavy_cap": {
+    "name": "Wavy cap",
+    "local": "Blauender Kahlkopf",
+    "latin": "Psilocybe cyanescens",
+    "mapping": false,
+    "months": null,
+    "temp": null,
+    "host": null,
+    "canopy": null,
+    "note": "Record sightings in your notebook. Our forest data cannot support a habitat score for this species.",
+    "unmapped": [
+      "Woodchip substrate",
+      "Unvalidated fruiting thresholds"
+    ],
+    "sources": [
+      {
+        "title": "Habitat evidence — Psilocybe cyanescens",
+        "url": "https://www.verspreidingsatlas.nl/biodiversiteit/habitat-distribution.aspx?soortnummer=10119060"
       }
     ]
   }

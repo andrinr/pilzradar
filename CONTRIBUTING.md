@@ -4,14 +4,14 @@ You can contribute through GitHub without setting up a development environment. 
 
 ## Option 1: suggest a species without code
 
-1. Open **[Suggest a mushroom species](https://github.com/andrinr/shrooms/issues/new?template=species.yml)**.
+1. Open **[Suggest a mushroom species](https://github.com/andrinr/pilzradar/issues/new?template=species.yml)**.
 2. Give its scientific name, habitat, tree partners and typical fruiting season.
 3. Link sources and explain which facts they support. Mention differences between Switzerland and the source region.
 4. List important inputs that are not mapped, such as soil pH or deadwood. Optional translated names are helpful.
 
 Maintainers can turn the suggestion into a profile. You do not need to supply numerical coefficients or all five translations to open an issue. Please do not publish precise private collecting locations.
 
-For a new data source or factor, use **[Suggest a habitat indicator](https://github.com/andrinr/shrooms/issues/new?template=indicator.yml)**.
+For a new data source or factor, use **[Suggest a habitat indicator](https://github.com/andrinr/pilzradar/issues/new?template=indicator.yml)**.
 
 ## Option 2: add a profile in a pull request
 
@@ -20,7 +20,7 @@ Most new species require editing only **two files**:
 - [`src/data.js`](src/data.js): species, model inputs, sources and missing indicators.
 - [`src/locales.js`](src/locales.js): common name, habitat note and any new visible labels in all five languages.
 
-On GitHub, fork the repository, open a file and use the pencil button to edit. Copy an existing profile, choose a new stable ID, update its fields and translations, then open a pull request. CI runs the checks for you. A profile using existing indicators needs no geodata rebuild, database migration, route or dropdown change: the map, API and saved spots use the shared catalog automatically. A running backend must be restarted when deploying catalog changes.
+On GitHub, fork the repository, open a file and use the pencil button to edit. Copy an existing profile, choose a new stable ID, update its fields and translations, then open a pull request. Run the checks below locally before submitting. A profile using existing indicators needs no geodata rebuild, database migration, route or dropdown change: the map, API and saved spots use the shared catalog automatically. A running backend must be restarted when deploying catalog changes.
 
 ### Profile reference
 
@@ -61,7 +61,7 @@ The tree association has ecological support. **The temperature band, canopy cate
 | `unmapped` | Array of relevant unavailable indicators. Displayed under “Ecology & limits”; these **do not contribute to the score**. |
 | `sources` | One or more `{title,url}` entries, with HTTPS URLs. Prefer inventories, research and authored field guides; identify what is supported and the source region. |
 
-Unknown profile fields fail validation. Adding `soilPH`, `altitude` or `moisturePreference` to a profile alone would otherwise have no effect, so these cannot silently pass CI.
+Unknown profile fields fail validation. Adding `soilPH`, `altitude` or `moisturePreference` to a profile alone would otherwise have no effect, so these cannot silently pass validation.
 
 ### Available indicators
 
@@ -124,3 +124,7 @@ Translate complete thoughts wherever possible. Check text split around links in 
 Optional `soil` fields are `acidUntil`, `fadeUntil` (pH CaCl₂ at 0–5 cm), `maxShare` (greater than 0, at most 0.05), and `source` (must match a cited profile source URL). Omit the field for unsupported species. These broad curves are provisional; do not copy water-pH optima into this scale. See [the soil model](docs/SOIL.md) for uncertainty handling and examples in `src/data.js`.
 
 After regenerating forest or soil data, run `node scripts/join_soil.cjs` to refresh the native samples used by both frontend and API. Derived pH fields remain CC BY-SA 4.0.
+
+### Evidence-limited profiles
+
+`months`, `temp` and `canopy` may be explicitly `null` when no defensible setting is configured. The factor is omitted and gets zero weight. Do not substitute another species' temperature band merely to fill the field. State which ecological association each source supports, distinguish regional season guides from Swiss validation, and describe unmodeled alternative hosts. See [the evidence review](docs/species-evidence.md).

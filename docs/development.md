@@ -30,15 +30,9 @@ npm test
 
 The tests check dry-weather sensitivity, species response to tree mix, missing data, terrain effects, exclusion of future weather, and validity of every generated cell.
 
-## Continuous integration
+## Local validation
 
-[CI runs](https://github.com/andrinr/shrooms/actions/workflows/ci.yml) execute on every push and pull request, and can also be started manually. The workflow uses Node 24 and checks JavaScript syntax, Python script syntax, the ecological model, all compressed chunks through the actual loader, missing assets, and project-relative links. Tests use bundled data and fixed dates, so an aging weather snapshot or unavailable external API does not break CI.
-
-A separate job builds the Docker image, checks Compose, starts and restarts the server, and verifies an online SQLite backup.
-
-Each successful run uploads a `shrooms-static-site` artifact containing only deployable assets (including `.nojekyll`). Raw source downloads, caches, scripts, tests, and Git metadata are excluded. Existing branch-based GitHub Pages deployment remains supported; CI does not change the repository's Pages settings.
-
-To run the same checks and produce the static folder locally:
+GitHub Actions CI is disabled. Run checks and build the static folder locally:
 
 ```sh
 node scripts/check_syntax.cjs
@@ -47,7 +41,7 @@ PYTHONPYCACHEPREFIX=.cache/pycompile python3 -m py_compile scripts/*.py
 node scripts/package_site.cjs
 ```
 
-Serve `_site/` to preview the packaged version. No dependency installation, secrets, GIS rebuild, or live weather download is needed for CI.
+Serve `_site/` to preview the packaged version. Install test dependencies with `npm ci`. Checks use committed datasets and fixed dates; no secrets, GIS rebuild or live weather download is needed.
 
 
 ## Rebuild the basemap
@@ -58,7 +52,7 @@ After downloading the GIS-ZH sources:
 .venv/bin/python scripts/build_basemap.py --download
 ```
 
-Omit `--download` to reuse the cached OpenStreetMap extract. The SVG and label files are committed, so visitors and CI do not need to contact the data servers.
+Omit `--download` to reuse the cached OpenStreetMap extract. The SVG and label files are committed, so visitors and local tests do not need to contact the data servers.
 
 ## Repository layout
 
@@ -81,7 +75,7 @@ After refreshing the cached GIS-ZH sources, run:
 .venv/bin/python scripts/build_protected.py
 ```
 
-Commit `data/protected.js` together with rebuilt habitat data. CI verifies that the overlay and habitat metadata refer to the same reserve source hash.
+Commit `data/protected.js` together with rebuilt habitat data. Local tests verify that the overlay and habitat metadata refer to the same reserve source hash.
 
 ## Nationwide data
 
@@ -93,7 +87,7 @@ After installing the pinned Python requirements:
 .venv/bin/python scripts/build_national_protected.py
 ```
 
-The downloader pins official source URLs and checksums. Rebuilding Zürich with `build_habitat.py` produces 50 m cells. The national builder produces 100 m canton cells and a 500 m overview; it does not replace Zürich's more detailed survey. National protection combines swissTLMRegio with the committed Zürich overlay. All generated files in `data/` are committed, so runtime and CI never require Python or source downloads.
+The downloader pins official source URLs and checksums. Rebuilding Zürich with `build_habitat.py` produces 50 m cells. The national builder produces 100 m canton cells and a 500 m overview; it does not replace Zürich's more detailed survey. National protection combines swissTLMRegio with the committed Zürich overlay. All generated files in `data/` are committed, so runtime and tests never require Python or source downloads.
 
 ## Full application
 

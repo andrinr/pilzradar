@@ -64,7 +64,7 @@ Rebuild after refreshing the cached municipality data:
 
 Omit `--download` to reuse `.cache/basemap-osm.json`. OSM-derived place data are provided under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/); the bundled SVG includes © OpenStreetMap contributors data. Source extraction and rendering steps are supplied in this repository.
 
-Both basemap files are bundled into the CI artifact automatically.
+Both basemap files are included in the static build automatically.
 
 ## Heatmap contrast
 
@@ -96,7 +96,7 @@ The catalog in `src/data.js` is shared by the frontend and API. Every profile li
 
 New profiles use European habitat references, including [winter chanterelle](https://www.first-nature.com/fungi/cantharellus-tubaeformis.php), [slippery jack](https://www.first-nature.com/fungi/suillus-luteus.php), [NDFF spruce milkcap ecology](https://www.verspreidingsatlas.nl/0069170) and [NDFF charcoal burner host observations](https://www.verspreidingsatlas.nl/biodiversiteit/habitat-distribution.aspx?soortnummer=10126300). Source seasons from other countries are context, not validated Swiss phenology. Temperature bands, host coefficients and canopy choices are provisional hypotheses. No empirical calibration is implied by these links.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) to propose a species or implement a new data-backed indicator. CI rejects unsupported fields, invalid ranges, missing sources and incomplete translations.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) to propose a species or implement a new data-backed indicator. Local validation rejects unsupported fields, invalid ranges, missing sources and incomplete translations.
 
 ## Nationwide cartography
 
@@ -117,3 +117,13 @@ Overview colors are clipped to actual swissTLM3D forest footprints, drawn in can
 Each available factor exposes its normalized `share` and `multiplier = max(0.02, suitability) ** share`. The final score is `round(100 × product of multipliers)`; missing factors have zero share and multiplier 1. Displayed weights and multipliers are rounded. Contributions multiply, rather than adding percentage points.
 
 The relative comparison is the proportion of visible forest cells with a strictly lower score for the selected species. Ties are not counted as lower. It is shown only for a selected cell in the current viewport and dataset. It changes with the viewport and does not change the ecological score or imply a probability of finding mushrooms.
+
+### Additional environmental context
+
+Summer/winter canopy openness (5 m source), topsoil clay/sand and minimum expected soil depth with prediction intervals (25 m source), and dated MeteoSwiss climate analyses (1 km) are now available on demand in selected-cell details. They have zero score weight pending validation. National dominant-tree data still requires access. See [environmental data](environment-data.md) for processing, attribution, refresh commands and performance.
+
+## Combined map
+
+The default “All mushrooms” view is the arithmetic mean of the **20 modelled species scores**, rounded to a whole number for display. Each species contributes 1/20 (5%). The two observation-only profiles are excluded. Opening a cell shows the unrounded mean and each species' score, weight and contributed points; choosing a species opens its individual map. Saved places can retain the combined view, but sighting entry still asks for an actual species or an unidentified mushroom.
+
+The average inherits each model's seasonal assumptions and missing-data behavior. It includes all modelled species, including toxic ones, and reflects this catalogue's balance of species. It is neither an edibility index nor an estimate of mushroom diversity, abundance or encounter probability. Overview areas continue to summarize cells by forest area. Combined results and per-species batches are cached in the scoring worker so switching views does not repeat the national calculation.

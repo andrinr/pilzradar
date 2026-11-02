@@ -1,0 +1,32 @@
+{
+  "bucket": "shrooms-static-andrinr-20261102",
+  "region": "eu-central-1",
+  "distributionId": "EGXXQ3XBHJL90",
+  "url": "https://www.pilzradar.ch",
+  "plan": "CloudFront Free",
+  "defaultRootObject": "index.html",
+  "budgetName": "shrooms-monthly-5-usd",
+  "budgetUsdPerMonth": 5,
+  "budgetIsHardCap": false,
+  "customDomain": "www.pilzradar.ch",
+  "cdnUrl": "https://dml79psi3sb8a.cloudfront.net",
+  "certificateId": "c2efa2b9-de92-4d26-a138-87d5b0fd906c",
+  "domainSetup": {
+    "registrar": "Infomaniak",
+    "searchConsoleVerified": true,
+    "websiteHttpsVerified": true,
+    "apexHttpsVerified": false,
+    "apexStatus": "Infomaniak forwarding has a self-signed TLS certificate; HTTPS apex still needs correction",
+    "validationRecords": [
+      {
+        "name": "_bccb6c87ff0f6e174ad9bed1ea1c0ebe.pilzradar.ch",
+        "target": "_4290d49bac7a069b929bb01067f8c128.wzccmgtwzk.acm-validations.aws"
+      },
+      {
+        "name": "_05c1135f57faca26f5a3b96a18802f8b.www.pilzradar.ch",
+        "target": "_bea8367082d067fae82f5834e39ccd9e.wzccmgtwzk.acm-validations.aws"
+      }
+    ],
+    "sitemapStatus": "Google processed https://www.pilzradar.ch/sitemap.xml without errors; 116 pages discovered"
+  }
+}

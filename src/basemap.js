@@ -2,12 +2,12 @@
 (function(){
   const root='https://wmts.geo.admin.ch/1.0.0/';
   const definitions=[
-    ['ch.swisstopo.pixelkarte-grau','jpeg','swissBase',210],
-    ['ch.swisstopo.pixelkarte-grau','jpeg','swissInk',430]
+    ['ch.swisstopo.pixelkarte-farbe','jpeg','swissBase',210],
+    ['ch.swisstopo.pixelkarte-farbe','jpeg','swissInk',430]
   ];
   function mount(L,map,onChange){
     let online=false,orientation=true,layers=[];
-    for(const [, ,name,z] of definitions){const pane=map.createPane(name);pane.style.zIndex=z;pane.style.pointerEvents='none';if(name==='swissBase')pane.style.filter='contrast(.65) brightness(1.2)';if(name==='swissInk'){pane.style.mixBlendMode='multiply';pane.style.opacity='.4';}}
+    for(const [, ,name,z] of definitions){const pane=map.createPane(name);pane.style.zIndex=z;pane.style.pointerEvents='none';if(name==='swissBase')pane.style.filter='contrast(.9) saturate(1.15)';if(name==='swissInk'){pane.style.mixBlendMode='multiply';pane.style.filter='grayscale(1)';pane.style.opacity='.4';}}
     function remove(){for(const layer of layers)map.removeLayer(layer);layers=[];}
     function mode(enabled){
       remove();online=enabled;

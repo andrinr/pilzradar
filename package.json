@@ -1,10 +1,12 @@
 {
-  "name": "shrooms",
+  "name": "pilzradar",
   "version": "1.0.0",
   "private": true,
   "description": "Swiss mushroom habitat explorer with a cached weather and habitat API",
   "license": "MIT",
-  "engines": {"node": ">=24"},
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "node server/index.cjs",
     "dev": "node --watch server/index.cjs",
@@ -13,6 +15,15 @@
     "pretest": "npm run build",
     "test": "node --test tests/*.test.cjs",
     "data:soil-join": "node scripts/join_soil.cjs",
-    "weather:refresh": "node scripts/prefetch_weather.cjs"
+    "weather:refresh": "node scripts/prefetch_weather.cjs",
+    "build:static": "node scripts/package_site.cjs --static",
+    "release": "node scripts/release.cjs",
+    "bench": "node scripts/benchmark.cjs",
+    "data:environment": ".venv/bin/python scripts/fetch_environment.py && .venv/bin/python scripts/build_environment.py",
+    "data:climate": ".venv/bin/python scripts/build_climate.py",
+    "check:deployed": "node scripts/check_deployed.cjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.4"
   }
 }

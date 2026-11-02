@@ -114,7 +114,7 @@ svg=[f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 {(maxy-miny)*sc
 for p,g in projected:svg.append(f'<path d="{svgpath(g)}" fill="#efeddf" stroke="#b9adc3" stroke-width=".6"/>')
 for p,g in records(product,'tlmregio_hydrography_lake'):
  if not g.intersects(country):continue
- svg.append(f'<path d="{svgpath(transform(mercator,g).simplify(70))}" fill="#c6dedd"/>')
+ svg.append(f'<path d="{svgpath(transform(mercator,g).simplify(70))}" fill="#70abc5"/>')
 for p,g in records(product,'tlmregio_transportation_road',"objval IN ('Autobahn','Autostr','HauptStrAB4','HauptStrAB6')"):
  if not g.intersects(country):continue
  svg.append(f'<path d="{svgpath(transform(mercator,g).simplify(90))}" fill="none" stroke="#b8a493" stroke-width=".55"/>')

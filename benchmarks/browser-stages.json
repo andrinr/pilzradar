@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-02",
+  "environment": "Local in-app browser on Apple M5 Max; desktop viewport; local HTTP; mixed warm resource cache",
+  "scope": "Single observed actions, not medians or controlled cross-device comparisons",
+  "stages": [
+    {"stage": "scoring worker, overview painted on UI thread", "chanterelleWorkerMs": 105, "chanterelleRecomputeMs": 864, "observedLongTaskMs": 1131},
+    {"stage": "scoring and overview workers, before summary/palette reuse", "chanterelleWorkerMs": 30, "chanterelleRecomputeMs": 237, "observedLongTaskMs": 207}
+  ]
+}

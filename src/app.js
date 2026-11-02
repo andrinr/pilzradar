@@ -1,11 +1,10 @@
 (async function () {
   const $=id=>document.getElementById(id);
   const locale=window.SHROOMS_I18N?.locale||'en-GB';
-  const catalog=await window.SHROOMS_LOAD('regions');
+  const weatherSnapshot=window.SHROOMS_LOAD('national-weather').catch(()=>null);
+  const [catalog,manifest,forestOverview,data,basemap]=await Promise.all(['regions','habitat/index','overview-forest/index',window.SHROOMS_BINARY?'regions/ch/compact-index':'regions/ch/index','switzerland-map'].map(window.SHROOMS_LOAD));
   const requested=new URLSearchParams(location.search).get('region')||'ch';
   const region=catalog.regions.find(r=>r.id==='ch');
-  const manifest=await window.SHROOMS_LOAD('habitat/index');
-  const forestOverview=await window.SHROOMS_LOAD('overview-forest/index');
   const habitat=window.SHROOMS_HABITAT.create(manifest,window.SHROOMS_LOAD);
   window.SHROOMS_REGION='ch';window.SHROOMS_SEAMLESS=true;
   $('region').innerHTML=catalog.regions.map(r=>`<option value="${r.id}">${r.name}</option>`).join('');
@@ -15,20 +14,18 @@
     state.map.fitBounds(target?target.bounds:basemap.bounds,{padding:[20,20]});
     const url=new URL(location.href);url.searchParams.set('region',$('region').value);history.replaceState(null,'',url);
   });
-  let data;
-  try { data=await window.SHROOMS_LOAD(region.index); } catch(error) { $('map').textContent='Forest data could not load. Please reload using a current browser.'; console.error(error); return; }
-  const species=window.SHROOMS_SPECIES;
+  const species={all:{name:'All mushrooms',latin:'Combined habitat',note:'Equal-weight average of modelled species. Observation-only profiles are excluded.',unmapped:[],sources:[]},...window.SHROOMS_SPECIES};
   if (!data) { $('map').textContent='The forest dataset could not load. Reload the page to try again.'; return; }
   const baseCells=data.cells;
   let cells=baseCells,localFeatures=new Map();
   const national=true;
-  const basemap=national?await window.SHROOMS_LOAD('switzerland-map'):window.SHROOMS_BASEMAP;
   const byId=new Map(cells.map(c=>[c.id,{type:"Feature",properties:c}]));
   let detailTiles;
   const overviewGroups=new Map([500,1000].map(size=>[size,window.SHROOMS_ADAPTIVE.group(cells,size)]));
-  const state={species:'porcini',selected:null,map:null,layer:null,selection:null,mode:'heat',weather:new Map(),scores:new Map(),status:'loading',search:'',updated:null};
+  const requestedSpecies=new URLSearchParams(location.search).get('species');
+  const state={species:Object.hasOwn(species,requestedSpecies)?requestedSpecies:'all',selected:null,map:null,layer:null,selection:null,mode:'heat',weather:new Map(),scores:new Map(),status:'loading',search:'',updated:null};
   let rankedCells=[],baseRankedCells=[];
-  const overviewSummaries=new Map();
+  const overviewSummaries=new Map(),overviewTemplates=new Map();
   function invalidateOverview(){overviewSummaries.clear();}
   const today=new Date();
   const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(today).map(p=>[p.type,p.value]));
@@ -37,7 +34,7 @@
   const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const number=(v,suffix='',digits=0)=>known(v)?`${new Intl.NumberFormat(locale,{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(v)}${suffix}`:'Not available';
   const treeName=c=>c.treeKnown<.5?'Tree mix unavailable':c.conifer>=75?'Conifer forest':c.broadleaf>=75?'Broadleaf forest':'Mixed forest';
-  const treeColor=c=>c.treeKnown<.5?'#a79baa':c.conifer>=75?'#8064c0':c.broadleaf>=75?'#63bc9b':'#d3d781';
+  const treeColor=c=>c.treeKnown<.5?'#8e9a86':c.conifer>=75?'#1c5a3b':c.broadleaf>=75?'#73a72c':'#b6c93a';
   const scored=c=>state.scores.get(c.id);
   const label=v=>v>=70?'Stronger habitat signal':v>=45?'Moderate habitat signal':'Lower habitat signal';
   $('date-pill').textContent=window.SHROOMS_I18N.date(today,{timeZone:'Europe/Zurich',day:'numeric',month:'short',year:'numeric'}).toUpperCase();
@@ -47,20 +44,33 @@
   }else{$('collecting-title').textContent='Check local collecting rules';$('collecting-copy').textContent='Rules differ across Switzerland. Check cantonal, municipal and protected-area restrictions. This habitat score does not establish collection permission.';}
   $('dataset-count').textContent=manifest.tiles.reduce((sum,tile)=>sum+tile.count,0).toLocaleString(locale);
 
-  let interpolatedSource;
+  const compute=window.SHROOMS_COMPUTE.create(baseCells,data.weatherPoints);
+  let computation=0,interpolatedSource;
   const cellWeather=new Map();
   let heatScale=window.SHROOMS_HEAT_SCALE([]);
   const scoreColor=value=>window.SHROOMS_COLOR(heatScale.normalize(value));
-  function recompute() {
-    state.map?.closePopup();
-    if(interpolatedSource!==state.weather){
-      cellWeather.clear();
-      if(state.weather.size)for(const c of [...baseCells,...(cells===baseCells?[]:cells)])cellWeather.set(c.id,window.SHROOMS_WEATHER.interpolate(c,data.weatherPoints,state.weather));
-      interpolatedSource=state.weather;
-    }
-    [...baseCells,...(cells===baseCells?[]:cells)].forEach(c=>state.scores.set(c.id,window.SHROOMS_SCORE.score(c,species[state.species],cellWeather.get(c.id),today)));
-    if(state.selected&&!cells.some(c=>c.id===state.selected)){const c=byId.get(state.selected)?.properties;if(c)state.scores.set(c.id,window.SHROOMS_SCORE.score(c,species[state.species],cellWeather.get(c.id),today));}
-    baseRankedCells=[...baseCells].sort((a,b)=>scored(b).value-scored(a).value);
+  function fullScore(c){
+    let weather=cellWeather.get(c.id);
+    if(!cellWeather.has(c.id)){weather=state.weather.size?window.SHROOMS_WEATHER.interpolate(c,data.weatherPoints,state.weather):undefined;cellWeather.set(c.id,weather);}
+    return state.species==='all'?window.SHROOMS_SCORE.aggregate(c,weather,today):window.SHROOMS_SCORE.score(c,species[state.species],weather,today);
+  }
+  async function recompute() {
+    const started=performance.now(),current=++computation;
+    state.map?.closePopup();state.navigationStart=started;
+    if(species[state.species].mapping===false){habitat.cancel();detailTiles?.cancel();$('map').setAttribute('aria-busy','false');updateResolution();render();return;}
+
+    if(interpolatedSource!==state.weather){cellWeather.clear();interpolatedSource=state.weather;}
+    document.getElementById('map').setAttribute('aria-busy','true');
+    const extras=cells===baseCells?[]:[...cells];
+    const selected=byId.get(state.selected)?.properties;
+    if(selected&&!baseCells.includes(selected)&&!extras.includes(selected))extras.push(selected);
+    const scores=await compute.score(state.species,state.weather,today,extras);
+    if(current!==computation)return;
+    for(const c of cells)if(!scores.has(c.id))scores.set(c.id,fullScore(c));
+    state.scores=scores;
+    const commitStarted=performance.now();
+    document.getElementById('map').setAttribute('aria-busy','false');
+    baseRankedCells=scores.rank?Array.from(scores.rank,i=>baseCells[i]):[...baseCells].sort((a,b)=>scored(b).value-scored(a).value);
     rankedCells=cells===baseCells?baseRankedCells:[...cells].sort((a,b)=>scored(b).value-scored(a).value);
     invalidateOverview();
     heatScale=window.SHROOMS_HEAT_SCALE([...state.scores.values()].map(s=>s.value));
@@ -68,10 +78,10 @@
     $('heat-high').textContent=`≥ ${heatScale.high} / 100`;
     if (!state.selected) state.selected=rankedCells[0].id;
     state.layer?.setStyle(feature=>cellStyle(feature));
-    updateResolution();render();
+    updateResolution();render();window.SHROOMS_PERF.record('mainCommit',performance.now()-commitStarted);window.SHROOMS_PERF.record('recompute',performance.now()-started);
   }
   function cellStyle(feature) {
-    return {stroke:false,fillColor:state.mode==='heat'?scoreColor(scored(feature.properties).value):treeColor(feature.properties),fillOpacity:state.mode==='heat'?.35+.6*heatScale.normalize(scored(feature.properties).value)/100:.68};
+    return {stroke:false,fillColor:state.mode==='heat'?scoreColor(scored(feature.properties).value):treeColor(feature.properties),fillOpacity:state.mode==='heat'?.86:.8};
   }
   async function select(id,fly=true) {
     state.selected=id;
@@ -89,6 +99,8 @@
     renderDetail();renderList();
   }
   function renderList() {
+    if(species[state.species].mapping===false){$('result-count').textContent='—';$('site-list').innerHTML=`<p class="empty-list">${escape(window.SHROOMS_I18N.t('No habitat model'))}</p>`;return;}
+
     const query=state.search.toLocaleLowerCase();
     const bounds=state.map?.getBounds();
     const south=bounds?.getSouth(),north=bounds?.getNorth(),west=bounds?.getWest(),east=bounds?.getEast();
@@ -96,10 +108,10 @@
     const picks=[];
     for(const cell of visible){
       if(picks.every(p=>Math.hypot(p.x-cell.x,p.y-cell.y)>=1600))picks.push(cell);
-      if(picks.length===12)break;
+      if(picks.length===6)break;
     }
     $('result-count').textContent=`${visible.length.toLocaleString(locale)} CELLS`;
-    $('site-list').innerHTML=picks.length?picks.map(c=>`<button class="site-row ${c.id===state.selected?'active':''}" data-cell="${c.id}" type="button"><span class="site-icon">✳</span><span class="site-name"><strong>${escape(c.name)}</strong><small>${treeName(c)} · ${number(c.slope,'° slope')}</small></span><span class="site-score" style="--score-color:${scoreColor(scored(c).value)}">${scored(c).value}</span></button>`).join(''):'<p class="empty-list">No mapped forest cells here. Pan the map, clear the search, or choose “Whole canton”.</p>';
+    $('site-list').innerHTML=picks.length?picks.map(c=>`<button class="site-row ${c.id===state.selected?'active':''}" data-cell="${c.id}" type="button"><span class="site-icon">✳</span><span class="site-name"><strong>${escape(c.name)}</strong><small>${treeName(c)}</small></span><span class="site-score" style="--score-color:${scoreColor(scored(c).value)}">${scored(c).value}</span></button>`).join(''):'<p class="empty-list">No mapped forest cells here. Pan the map, clear the search, or choose “Whole canton”.</p>';
     $('site-list').querySelectorAll('[data-cell]').forEach(btn=>btn.addEventListener('click',()=>select(btn.dataset.cell)));
   }
   function factor(title,detail,factor) {
@@ -116,19 +128,31 @@
     if(result.status==='ready')text=`pH (CaCl₂): ${number(result.ph,'',1)}<br>${escape(t('90% prediction interval'))}: ${number(result.lower,'',1)}–${number(result.upper,'',1)}`;
     return `<div class="detail-note"><span>${escape(t('SOIL ACIDITY'))}</span><p>${text}</p><small>${escape(t('Predicted topsoil pH (0–5 cm), sampled at the cell centre from a 25 m grid. An experimental score input for supported species; not a local measurement.'))}</small><p><a href="https://doi.org/10.16904/envidat.484" target="_blank" rel="noopener noreferrer">WSL / EnviDat (2024)</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a></p></div>`;
   }
+  function renderCombined(c){
+    const result=fullScore(c),t=window.SHROOMS_I18N.t;
+    $('detail').innerHTML=`<div class="detail-title"><small class="atlas-kicker">${escape(t('Combined habitat'))}</small><h3>${escape(c.name)}</h3><p><span data-no-translate>${escape(c.district)}</span> · ${number(c.elevation,' m')}</p></div><div class="score-panel"><div class="score-ring" style="--value:${result.value};--ring-color:${scoreColor(result.value)}"><span>${result.value}<small>/ 100</small></span></div><div><small>${escape(t('All mushrooms'))}</small><strong>${escape(t(label(result.value)))}</strong><p>${escape(t('{count} modelled species').replace('{count}',result.count))}</p></div></div><button type="button" class="save-spot-direct">${escape(t('Save spot'))}</button><p class="combined-note">${escape(t('Equal-weight average of modelled species. Observation-only profiles are excluded.'))}</p><details class="combined-breakdown"><summary>${escape(t('Species contributions'))}</summary><p>${escape(t('Each species has the same weight. Its points are added to the combined score.'))}</p><p class="combined-equation">${number(result.mean,'',2)} → ${result.value} / 100</p>${[...result.breakdown].sort((a,b)=>b.value-a.value).map(item=>`<button class="combined-species" type="button" data-species="${item.id}"><span><strong>${escape(t(item.name))}</strong><small>${item.value}/100 · ${number(item.weight*100,'%')} · +${number(item.contribution,'',2)}</small></span><i style="--amount:${item.value}%"></i></button>`).join('')}</details><div class="detail-note"><span>${escape(t('CHECK LOCAL PROTECTION RULES'))}</span><p>${escape(t('Check local rules before collecting.'))}</p></div><p class="combined-note">${escape(t('Experimental habitat scores, not confirmed finds.'))}</p>`;
+    $('detail').querySelectorAll('[data-species]').forEach(button=>button.addEventListener('click',()=>{$('species').value=button.dataset.species;$('species').dispatchEvent(new Event('change',{bubbles:true}));}));
+  }
   function renderDetail() {
-    const c=byId.get(state.selected).properties, result=scored(c), w=cellWeather.get(c.id), s=species[state.species];
+    if(state.species==='all'){renderCombined(byId.get(state.selected).properties);return;}
+    const profile=species[state.species];
+    if(profile.mapping===false){$('detail').innerHTML=`<div class="detail-title"><h3>${escape(window.SHROOMS_I18N.t(profile.name))}</h3><p>${escape(profile.latin)}</p></div><div class="detail-note"><strong>${escape(window.SHROOMS_I18N.t('No habitat model'))}</strong><p>${escape(window.SHROOMS_I18N.t(profile.note))}</p></div><p class="species-warning">${escape(window.SHROOMS_I18N.t('Observation only. Do not eat; this map cannot establish identity or safety.'))}</p><button type="button" class="open-notebook">Saved spots</button>`;return;}
+
+    const c=byId.get(state.selected).properties, result=fullScore(c), w=cellWeather.get(c.id), s=species[state.species];
     const gridSize=c.cellSizeMeters||data.metadata.cellSizeMeters;
     const t=window.SHROOMS_I18N.t;
     const relative=state.visibleScores?.length>1&&state.map?.getBounds().contains([c.lat,c.lon])&&cells.some(v=>v.id===c.id)?t('Higher than {percent}% of visible forest cells for {species}.').replace('{percent}',number(Math.round(100*state.visibleScores.filter(v=>v<result.value).length/state.visibleScores.length))).replace('{species}',t(s.name)):'';
     const aspect=known(c.aspect)?['N','NE','E','SE','S','SW','W','NW'][Math.round(c.aspect/45)%8]:'unknown';
     const sunCopy=w?`${number(w.sunHours7,' h sunshine / 7 days',1)} · ${number(w.et014,' mm reference evaporation / 14 days',1)}`:'Sunshine and drying data unavailable';
     const weatherCopy=w?`${number(w.rain14,' mm',1)} / 14 days · ${number(w.humidity,'% RH')} · ${number(w.soil,' m³/m³',2)} soil water`:'Weather unavailable; this factor is omitted.';
-    $('detail').innerHTML=`<div class="detail-kicker">FOREST CELL <span>${c.id}</span></div><div class="detail-title"><h3>${escape(c.name)}</h3><p>${escape(c.district)} · ${number(c.elevation,' m')} · ${number(c.area,'',c.area%1?2:0)} ha mapped forest</p></div><button type="button" class="save-spot-direct">Save spot</button><div class="score-panel"><div class="score-ring" style="--value:${result.value};--ring-color:${scoreColor(result.value)}"><span>${result.value}<small>/ 100</small></span></div><div><small>MODELED SUITABILITY</small><strong>${label(result.value)}</strong><p>${s.name} · ${result.live?'weather included':'habitat & terrain only'}</p><p class="relative-score">${escape(relative)}</p></div></div>${c.reservePercent==null?`<div class="detail-note"><span>CHECK LOCAL PROTECTION RULES</span><p>Protection coverage is incomplete. Collecting may be forbidden in mapped areas and elsewhere. Check local rules before collecting.</p></div>`:c.reservePercent>0?`<div class="detail-note"><span>COLLECTING MAY BE FORBIDDEN</span><p>This cell overlaps a mapped forest reserve. Check the official rules before collecting; the score describes habitat suitability only.</p></div>`:""}<p class="score-explanation">${escape(t('Score for the selected mushroom. Start at 100 and multiply the factor multipliers. Missing inputs have no weight.'))}</p><div class="factor-heading">WHAT DRIVES IT? <span>${Object.values(result.factors).filter(f=>known(f.value)).length} / 7 FACTORS</span></div>${factor(s.host?'Tree partners':'Forest edge proxy',s.requiredTree?`${number(c[s.requiredTree],'% '+s.requiredTree)} · mapped host tree`:s.host?(c.treeKnown<.5?'Tree mix unavailable':`${number(c.broadleaf,'% broadleaf')} · ${number(c.conifer,'% conifer')}`):`${c.forest}% forest coverage in this ${gridSize} m cell`,result.factors.tree)}${factor('Canopy & forest coverage',`${number(c.canopy,'% canopy')} · ${c.forest}% of ${gridSize} m cell is forest`,result.factors.canopy)}${factor('Moisture',weatherCopy,result.factors.moisture)}${factor('Temperature',w?number(w.temp7,'°C · past 7 days',1):'Weather unavailable',result.factors.temperature)}${factor('Slope & aspect',`${number(c.slope,'° median slope',1)} · ${aspect} aspect`,result.factors.terrain)}${factor('Soil acidity (experimental)',known(result.factors.soil.value)?`${number(c.soilPh[0],'',1)} pH (CaCl₂) · ${number(100*result.factors.soil.weight/result.completeness,'%',1)} ${escape(window.SHROOMS_I18N.t('of score weight'))}`:window.SHROOMS_I18N.t(s.soil?'Missing or uncertain soil data; omitted.':'No soil preference configured; omitted.'),result.factors.soil)}${factor('Season',s.months.map(m=>window.SHROOMS_I18N.date(new Date(2024,m-1),{month:'short'})).join(' · '),result.factors.season)}<div class="detail-note"><span>SUN & DRYING</span><p>${sunCopy}</p><small>Weather inputs blend regional anchors; they are not local forest measurements. Sunshine is not light reaching the forest floor. Reference evaporation modestly reduces the rainfall contribution; canopy and aspect already represent shelter.</small></div>${soilDetail()}<div class="detail-note"><span>TRACEABLE TO THE SOURCE</span><p>Forest source ${escape(c.forestSource||(c.yearMin===c.yearMax?c.yearMin:`${c.yearMin}–${c.yearMax}`))} · terrain ${c.terrainResolutionMeters||data.metadata.terrainResolutionMeters} m. Cell ${c.id}, ${c.lat.toFixed(4)}° N, ${c.lon.toFixed(4)}° E.</p><small>${gridSize} m score · ${c.maskResolutionMeters||data.metadata.maskResolutionMeters} m forest mask. This is a habitat estimate, not a sighting or collection permission.</small></div><a class="directions" href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener noreferrer">Explore this forest <span>↗</span></a>`;
+    $('detail').innerHTML=`<div class="detail-title"><h3>${escape(c.name)}</h3><p><span data-no-translate>${escape(c.district)}</span> · ${number(c.elevation,' m')} · ${number(c.area,'',c.area%1?2:0)} ha mapped forest</p></div><div class="score-panel"><div class="score-ring" style="--value:${result.value};--ring-color:${scoreColor(result.value)}"><span>${result.value}<small>/ 100</small></span></div><div><small>Experimental score</small><strong>${label(result.value)}</strong><p>${result.live?'weather included':'habitat & terrain only'}</p>${s.requiredTree&&!known(result.factors.tree.value)?`<p class="missing-host">${escape(t('Host tree not mapped; this estimate is incomplete.'))}</p>`:''}</div></div><button type="button" class="save-spot-direct">Save spot</button>${c.reservePercent==null?`<div class="detail-note"><span>CHECK LOCAL PROTECTION RULES</span><p>Check local rules before collecting.</p></div>`:c.reservePercent>0?`<div class="detail-note"><span>COLLECTING MAY BE FORBIDDEN</span><p>Mapped reserve overlap. Collecting may be forbidden.</p></div>`:""}<details class="score-details"><summary>Score details</summary><p class="relative-score">${escape(relative)}</p><p class="score-explanation">${escape(t('Score for the selected mushroom. Start at 100 and multiply the factor multipliers. Missing inputs have no weight.'))}</p><div class="factor-heading">WHAT DRIVES IT? <span>${Object.values(result.factors).filter(f=>known(f.value)).length} / 7 FACTORS</span></div>${factor(s.host?'Tree partners':'Forest edge proxy',s.requiredTree?`${number(c[s.requiredTree],'% '+s.requiredTree)} · mapped host tree`:s.host?(c.treeKnown<.5?'Tree mix unavailable':`${number(c.broadleaf,'% broadleaf')} · ${number(c.conifer,'% conifer')}`):`${c.forest}% forest coverage in this ${gridSize} m cell`,result.factors.tree)}${factor('Canopy & forest coverage',s.canopy?`${number(c.canopy,'% canopy')} · ${c.forest}% of ${gridSize} m cell is forest`:t('No validated setting; omitted.'),result.factors.canopy)}${factor('Moisture',weatherCopy,result.factors.moisture)}${factor('Temperature',!s.temp?t('No validated setting; omitted.'):w?number(w.temp7,'°C · past 7 days',1):'Weather unavailable',result.factors.temperature)}${factor('Slope & aspect',`${number(c.slope,'° median slope',1)} · ${aspect} aspect`,result.factors.terrain)}${factor('Soil acidity (experimental)',known(result.factors.soil.value)?`${number(c.soilPh[0],'',1)} pH (CaCl₂) · ${number(100*result.factors.soil.weight/result.completeness,'%',1)} ${escape(window.SHROOMS_I18N.t('of score weight'))}`:window.SHROOMS_I18N.t(s.soil?'Missing or uncertain soil data; omitted.':'No soil preference configured; omitted.'),result.factors.soil)}${factor('Season',s.months?s.months.map(m=>window.SHROOMS_I18N.date(new Date(2024,m-1),{month:'short'})).join(' · '):t('No validated setting; omitted.'),result.factors.season)}<div class="detail-note"><span>SUN & DRYING</span><p>${sunCopy}</p><small>Weather inputs blend regional anchors; they are not local forest measurements. Sunshine is not light reaching the forest floor. Reference evaporation modestly reduces the rainfall contribution; canopy and aspect already represent shelter.</small></div>${soilDetail()}<details class="environment-details"><summary>Environmental context</summary><div class="environment-context" data-no-translate></div></details><div class="detail-note"><span>TRACEABLE TO THE SOURCE</span><p>Forest source ${escape(c.forestSource||(c.yearMin===c.yearMax?c.yearMin:`${c.yearMin}–${c.yearMax}`))} · terrain ${c.terrainResolutionMeters||data.metadata.terrainResolutionMeters} m. Cell ${c.id}, ${c.lat.toFixed(4)}° N, ${c.lon.toFixed(4)}° E.</p><small>${gridSize} m score · ${c.maskResolutionMeters||data.metadata.maskResolutionMeters} m forest mask. This is a habitat estimate, not a sighting or collection permission.</small></div></details><a class="directions" href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener noreferrer">Explore this forest <span>↗</span></a>`;
+    window.SHROOMS_ENVIRONMENT_VIEW.mount($('detail'),c);
   }
   function render() {
-    $('species-evidence').innerHTML=`<summary>Ecology & limits</summary><p>Ecological sources support habitat descriptions. Numerical settings remain provisional.</p><strong>Not modeled</strong><ul>${species[state.species].unmapped.map(item=>`<li>${escape(item)}</li>`).join('')}</ul>${species[state.species].sources.map(source=>`<a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)} ↗</a>`).join('<br>')}`;
-    $('species-latin').textContent=`${species[state.species].latin} · ${species[state.species].note}`;
+    $('species-evidence').innerHTML=`<summary>Species notes</summary><p>${escape(species[state.species].note)}</p><p>Ecological sources support habitat descriptions. Numerical settings remain provisional.</p><strong>Not modeled</strong><ul>${species[state.species].unmapped.map(item=>`<li>${escape(item)}</li>`).join('')}</ul>${species[state.species].sources.map(source=>`<a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)} ↗</a>`).join('<br>')}`;
+    $('species').title=species[state.species].latin;
+    $('species-latin').classList.toggle('species-warning',['fly_agaric','liberty_cap','wavy_cap'].includes(state.species));
+    $('species-latin').textContent=`${species[state.species].latin}${['fly_agaric','liberty_cap','wavy_cap'].includes(state.species)?' · '+species[state.species].note:''}`;
     $('map-status').textContent=state.status==='loading'?'Loading weather…':state.status==='snapshot'?`Weather snapshot · ${state.weatherDay}`:state.status==='live'?`Weather refreshed · ${todayKey}`:state.status==='cached'?'Recent weather · cached':state.status==='partial'?'Partial weather coverage':'Habitat & terrain only';
     document.querySelector('.overlay-dot').classList.toggle('offline',state.status==='offline'||state.status==='partial');
     renderList();renderDetail();
@@ -143,11 +167,11 @@
   }
   function initMap() {
     if(!window.L){$('map').innerHTML='<div class="map-error">The map could not load. Reload to try again.</div>';return;}
-    state.map=L.map('map',{zoomControl:false,preferCanvas:true,zoomSnap:.25,zoomDelta:.5}).setView([47.43,8.65],10);
+    state.map=L.map('map',{zoomControl:false,preferCanvas:true,zoomSnap:0,zoomDelta:.5,wheelDebounceTime:30,wheelPxPerZoomLevel:60,scrollWheelZoom:'center',touchZoom:'center'}).setView([47.43,8.65],10);
     const base=basemap;
     if(base){
       state.map.createPane('offlineBase').style.zIndex=190;
-      L.imageOverlay(national?'./data/switzerland.svg':'./data/basemap.svg',base.bounds,{pane:'offlineBase',interactive:false,attribution:national?'© swisstopo; FOEN / WSL NFI':'Basemap, forest & terrain: <a href="https://geolion.zh.ch/geodatensatz/347">GIS-ZH</a> · © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'}).addTo(state.map);
+      let offlineLayer;state.showOffline=show=>{if(show){offlineLayer ||= L.imageOverlay('./data/switzerland.svg',base.bounds,{pane:'offlineBase',interactive:false,attribution:'© swisstopo; FOEN / WSL NFI'});offlineLayer.addTo(state.map);}else if(offlineLayer)state.map.removeLayer(offlineLayer);};
       state.map.createPane('placeLabels');
       state.map.getPane('placeLabels').style.pointerEvents='none';
       const labels=L.layerGroup().addTo(state.map);
@@ -249,10 +273,12 @@
     overviewPane.style.pointerEvents='none';
     state.overview=window.SHROOMS_OVERVIEW.create(L,state.map,{manifest:forestOverview,load:window.SHROOMS_LOAD,onError:()=>{$('geometry-status').hidden=false;}});
     let viewTimer;
-    state.map.on('movestart',()=>{clearTimeout(viewTimer);detailTiles.cancel();habitat.cancel();});
-    state.map.on('moveend',()=>{clearTimeout(viewTimer);viewTimer=setTimeout(()=>{updateResolution();renderList();renderDetail();loadVisibleTiles();},100);});const initial=manifest.regions.find(r=>r.id===requested);if(initial)state.map.fitBounds(initial.bounds,{padding:[20,20]});else all();updateResolution();loadVisibleTiles();select(state.selected,false);
+    state.overview.on('load',()=>{$('map').dataset.overviewReady='true';requestAnimationFrame(()=>requestAnimationFrame(()=>{if(window.SHROOMS_ADAPTIVE.resolution(state.map.getZoom())!==100&&!state.overview.isLoading()){state.map.removeLayer(state.layer);detailTiles.update([],()=>false);}}));if(state.navigationStart)window.SHROOMS_PERF.record('overviewReady',performance.now()-state.navigationStart);});
+    state.map.on('movestart wheelzoomstart',()=>{state.detailReady=false;state.navigationStart=performance.now();clearTimeout(viewTimer);detailTiles.cancel();habitat.cancel();});
+    window.SHROOMS_SMOOTH_ZOOM.attach(state.map);
+    state.map.on('moveend',()=>{clearTimeout(viewTimer);viewTimer=setTimeout(()=>{updateResolution();renderList();renderDetail();loadVisibleTiles();},100);});const initial=manifest.regions.find(r=>r.id===requested);if(initial)state.map.fitBounds(initial.bounds,{padding:[20,20]});else all();updateResolution();loadVisibleTiles();const firstVisible=rankedCells.find(c=>state.map.getBounds().contains([c.lat,c.lon]));if(firstVisible||state.selected)select(firstVisible?.id||state.selected,false);
     const tiledMap=window.SHROOMS_BASEMAP_TILES.mount(L,state.map,(online,failed)=>{
-      state.onlineMap=online;$('basemap-style').value=online?'online':'offline';
+      state.onlineMap=online;state.showOffline?.(!online);$('basemap-style').value=online?'online':'offline';
       $('map-orientation').disabled=!online;
       $('basemap-status').hidden=!failed;
       $('basemap-status').textContent=failed?'Online map unavailable. Showing the bundled map; select Swiss topo map to retry.':'';
@@ -265,14 +291,23 @@
   }
   function updateResolution() {
     if(!state.map||!state.overview)return;
+    $('map-legend').hidden=species[state.species].mapping===false;
+    if(species[state.species].mapping===false){state.map.removeLayer(state.overview);state.map.removeLayer(state.layer);state.map.getPane('overviewHeat').style.display='none';document.querySelector('.heatmap-caption').textContent=window.SHROOMS_I18N.t('No habitat model');$('heat-low').textContent='—';$('heat-high').textContent='—';return;}
+
     const size=window.SHROOMS_ADAPTIVE.resolution(state.map.getZoom());
     if(size!==100&&cells!==baseCells){cells=baseCells;rankedCells=baseRankedCells;}
     const sizes=[...new Set(cells.map(c=>c.cellSizeMeters||500))].sort((a,b)=>a-b);
     const gridSize=size===100&&sizes.length?sizes.join('–'):'50';
-    state.map.getPane('overviewHeat').style.display=size===100?'none':'';
+    state.map.getPane('overviewHeat').style.display='';
     document.querySelector('.heatmap-caption').textContent=size===100?`${state.onlineMap?'Swiss topo map':'Offline basemap'} · ${gridSize} m forest scores`:`${state.onlineMap?'Swiss topo map':'Offline basemap'} · ${size===1000?'1 km':'500 m'} overview · zoom for ${gridSize} m detail`;
+    // Do not briefly recolour an incoming fine view using the coarse-cell range.
+    if(size===100&&cells===baseCells)return;
     const visibleBounds=state.map.getBounds();
-    if(size!==100&&!overviewSummaries.has(size))overviewSummaries.set(size,overviewGroups.get(size).map(group=>({...window.SHROOMS_ADAPTIVE.summarize(group,state.scores),members:group.map(c=>c.id)})));
+    if(size!==100&&!overviewSummaries.has(size)){
+      const groups=overviewGroups.get(size);
+      if(!overviewTemplates.has(size))overviewTemplates.set(size,groups.map(group=>({...window.SHROOMS_ADAPTIVE.summarize(group,state.scores),area:group.reduce((sum,c)=>sum+c.area,0),members:group.map(c=>c.id)})));
+      overviewSummaries.set(size,groups.map((group,i)=>({...overviewTemplates.get(size)[i],value:group.reduce((sum,c)=>sum+scored(c).value*c.area,0)/overviewTemplates.get(size)[i].area})));
+    }
     const displayed=size===100?cells:overviewSummaries.get(size);
     const south=visibleBounds.getSouth(),north=visibleBounds.getNorth(),west=visibleBounds.getWest(),east=visibleBounds.getEast();
     const values=displayed.filter(c=>c.lat>=south&&c.lat<=north&&c.lon>=west&&c.lon<=east).map(c=>size===100?scored(c).value:c.value);
@@ -284,10 +319,10 @@
     $('heat-high').textContent=`≥ ${Math.round(heatScale.high)} / 100`;
     if(size===100&&state.mode==='heat'&&(scaleChanged||!state.map.hasLayer(state.layer)))state.layer.setStyle(cellStyle);
     if(size===100){
-      state.map.removeLayer(state.overview);state.layer.addTo(state.map);
+      if(state.detailReady)state.map.removeLayer(state.overview);
+      state.layer.addTo(state.map);
       return;
     }
-    state.map.removeLayer(state.layer);
     state.overview.setData(overviewSummaries.get(size),size,
       summary=>state.mode==='heat'?scoreColor(summary.value):treeColor(summary),
       (summary,key)=>showSummary(overviewGroups.get(size)[key],summary,size),
@@ -298,7 +333,11 @@
   function showSummary(group,summary,size){
     const t=window.SHROOMS_I18N.t;
     const names={tree:'Tree partners',canopy:'Canopy & forest coverage',moisture:'Moisture',temperature:'Temperature',terrain:'Slope & aspect',season:'Season',soil:'Soil acidity (experimental)'};
-    const factors=window.SHROOMS_ADAPTIVE.factors(group,state.scores);
+    if(state.species==='all'){
+      const area=group.reduce((sum,c)=>sum+c.area,0),rows=window.SHROOMS_SCORE.modelled().map(([id,p])=>({id,name:p.name,value:group.reduce((sum,c)=>{let weather=cellWeather.get(c.id);if(!cellWeather.has(c.id)){weather=state.weather.size?window.SHROOMS_WEATHER.interpolate(c,data.weatherPoints,state.weather):undefined;cellWeather.set(c.id,weather);}return sum+window.SHROOMS_SCORE.score(c,p,weather,today,true)*c.area;},0)/area})).sort((a,b)=>b.value-a.value);
+      const content=document.createElement('div');content.className='summary-popup';content.innerHTML=`<strong>${escape(t('All mushrooms'))} · ${Math.round(summary.value)}/100</strong><p>${escape(t('Area-weighted mean of {count} cells').replace('{count}',summary.count))}</p><p>${escape(t('Equal-weight average of modelled species. Observation-only profiles are excluded.'))}</p><table>${rows.map(row=>`<tr><td>${escape(t(row.name))}</td><td>${Math.round(row.value)}/100</td></tr>`).join('')}</table>`;L.popup().setLatLng([summary.lat,summary.lon]).setContent(content).openOn(state.map);return;
+    }
+    const factors=window.SHROOMS_ADAPTIVE.factors(group,new Map(group.map(c=>[c.id,fullScore(c)])));
     const rows=Object.entries(names).map(([key,name])=>`<tr><td>${escape(t(name))}</td><td>${factors[key]===null?'—':Math.round(factors[key]*100)+'/100'}</td></tr>`).join('');
     const content=document.createElement('div');content.className='summary-popup';
     content.innerHTML=`<strong>${escape(t('{size} forest summary').replace('{size}',size===1000?'1 km':'500 m'))}</strong><p>${escape(t(species[state.species].name))} · ${Math.round(summary.value)}/100</p><p>${escape(t('Area-weighted mean of {count} cells').replace('{count}',summary.count))}</p><table>${rows}</table><p>${escape(t('Missing factors are omitted. Summary factors average only cells with data.'))}</p><button type="button">${escape(t('Zoom to forest cells'))}</button>`;
@@ -343,8 +382,9 @@
   }
   async function loadVisibleTiles() {
     if(!detailTiles)return;
+    if(species[state.species].mapping===false){await detailTiles.update([],()=>false);return;}
     if(window.SHROOMS_ADAPTIVE.resolution(state.map.getZoom())!==100){
-      await detailTiles.update([],()=>false);$('geometry-status').hidden=true;$('map').dataset.renderedCells=0;return;
+      $('geometry-status').hidden=true;$('map').dataset.renderedCells=0;return;
     }
     const bounds=state.map.getBounds().pad(.06);
     const view=await habitat.view([[bounds.getSouth(),bounds.getWest()],[bounds.getNorth(),bounds.getEast()]]);
@@ -355,13 +395,13 @@
     for(const f of view.features){
       const c=f.properties;byId.set(c.id,f);
       const weather=state.weather.size?window.SHROOMS_WEATHER.interpolate(c,data.weatherPoints,state.weather):undefined;
-      cellWeather.set(c.id,weather);state.scores.set(c.id,window.SHROOMS_SCORE.score(c,species[state.species],weather,today));
+      cellWeather.set(c.id,weather);state.scores.set(c.id,fullScore(c));
     }
     rankedCells=[...cells].sort((a,b)=>scored(b).value-scored(a).value);
     updateResolution();renderList();
     const keys=[...new Set(cells.map(c=>c.tile))];
     const result=await detailTiles.update(keys,f=>localFeatures.has(f.properties.id));
-    if(!result.stale){$('geometry-status').hidden=!(result.failed||view.failed);$('map').dataset.renderedCells=result.count;
+    if(!result.stale){state.detailReady=!(result.failed||view.failed);if(state.detailReady)requestAnimationFrame(()=>requestAnimationFrame(()=>{if(state.detailReady&&window.SHROOMS_ADAPTIVE.resolution(state.map.getZoom())===100)state.map.removeLayer(state.overview);}));if(state.navigationStart)window.SHROOMS_PERF.record('detailReady',performance.now()-state.navigationStart);$('geometry-status').hidden=!(result.failed||view.failed);$('map').dataset.renderedCells=result.count;
       for(const id of previousFeatures.keys())if(!localFeatures.has(id)&&id!==state.selected){byId.delete(id);state.scores.delete(id);cellWeather.delete(id);}
     }
     const selected=byId.get(state.selected)?.properties;
@@ -386,12 +426,12 @@
     }else{state.weather=new Map();state.status='offline';}
     recompute();
   }
-  async function initialWeather() {
+  async function initialWeather(recomputeScores=true) {
     if(window.SHROOMS_SERVICE&&await window.SHROOMS_SERVICE.ready){
       try{await serverWeather();return;}catch{console.warn('Shared weather unavailable; trying bundled snapshot.');}
     }
     try {
-      const snapshot=await window.SHROOMS_LOAD(national?'national-weather':'weather');
+      const snapshot=national?await weatherSnapshot:await window.SHROOMS_LOAD('weather');
       if(window.SHROOMS_WEATHER.usable(snapshot,data.weatherPoints,today)){
         state.weather=new Map(snapshot.entries);state.status='snapshot';state.weatherDay=snapshot.day;
       }else state.status='offline';
@@ -401,7 +441,7 @@
       const cached=JSON.parse(localStorage.getItem('shrooms-weather-v3'));
       if(cached?.day===todayKey&&window.SHROOMS_WEATHER.usable(cached,data.weatherPoints,today)&&Date.now()-cached.at<3600000){state.weather=new Map(cached.entries);state.status='cached';}
     }catch{}
-    recompute();
+    if(recomputeScores)await recompute();
   }
   async function loadWeather(force=false) {
     if(window.SHROOMS_SERVICE&&await window.SHROOMS_SERVICE.ready){
@@ -437,19 +477,26 @@
     if(state.status==='live')try{localStorage.setItem(cacheKey,JSON.stringify({day:todayKey,grid:gridKey,at:Date.now(),entries:[...state.weather]}));}catch{}
     recompute();
   }
-  $('species').innerHTML=Object.entries(species).map(([id,s])=>`<option value="${id}">${escape(window.SHROOMS_I18N.t(s.name))}${window.SHROOMS_I18N.t(s.name)===s.latin?'':` · ${escape(s.latin)}`}</option>`).join('');
-  $('species').addEventListener('change',event=>{state.species=event.target.value;recompute();});
+  $('species').innerHTML=Object.entries(species).map(([id,s])=>`<option value="${id}">${escape(window.SHROOMS_I18N.t(s.name))}</option>`).join('');
+  $('detail').addEventListener('click',event=>{if(event.target.closest('.open-notebook'))document.querySelector('.account-trigger')?.click();});
+  $('species').value=state.species;
+  $('species').addEventListener('change',event=>{state.species=event.target.value;const url=new URL(location.href);url.searchParams.set('species',state.species);history.replaceState(null,'',url);recompute();});
   $('place-search').addEventListener('input',event=>{state.search=event.target.value.trim();renderList();});
   $('heatmap-mode').addEventListener('click',()=>mapMode('heat'));
   $('points-mode').addEventListener('click',()=>mapMode('forest'));
   $('refresh-weather').addEventListener('click',()=>loadWeather(true));
   $('retry-protection').addEventListener('click',loadProtected);
   let pendingSpot=null;
-  window.SHROOMS_SELECTED=()=>{const c=byId.get(state.selected).properties;return {...c,id:c.sourceId||c.id,species:state.species,region:c.sourceId?c.region:'ch'};};
+  window.SHROOMS_SELECTED=()=>{if(species[state.species].mapping===false)return null;const c=byId.get(state.selected).properties;return {...c,id:c.sourceId||c.id,species:state.species,region:c.sourceId?c.region:'ch'};};
   window.addEventListener('shrooms:open-spot',event=>{
     const spot=event.detail;if(spot.species&&species[spot.species]){$('species').value=spot.species;state.species=spot.species;recompute();}
     const id=spot.cellId?.startsWith('ch:')?spot.cellId.slice(3):spot.cellId;
     if(byId.has(id))select(id);else{pendingSpot=spot;state.map.setView([spot.lat,spot.lon],14);loadVisibleTiles();}
   });
-  recompute();initMap();loadProtected();initialWeather();window.dispatchEvent(new Event('shrooms:ready'));
-})();
+  await initialWeather(false);await recompute();initMap();let protectionStarted=false;const startProtection=()=>{if(!protectionStarted){protectionStarted=true;loadProtected();}};state.overview?.once('load',startProtection);setTimeout(startProtection,3000);window.SHROOMS_PERF.record('interactive',performance.now());window.dispatchEvent(new Event('shrooms:ready'));
+})().catch(error=>{
+  console.error('Map initialization failed',error);
+  const message=window.SHROOMS_I18N?.t('Forest data could not load. Please reload using a current browser.')||'Forest data could not load. Please reload using a current browser.';
+  document.getElementById('map-status').textContent=message;
+  document.getElementById('map').textContent=message;
+});

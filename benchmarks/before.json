@@ -1,0 +1,88 @@
+{
+  "node": "v26.3.1",
+  "cpu": "Apple M5 Max",
+  "platform": "darwin",
+  "cellCount": 85969,
+  "weatherPoints": 137,
+  "iterations": 5,
+  "date": "2026-09-23T12:00:00.000Z",
+  "results": {
+    "weather_interpolation": {
+      "medianMs": 493.87,
+      "p95Ms": 1065.4,
+      "samplesMs": [
+        1065.4,
+        504.76,
+        493.87,
+        490.82,
+        489.87
+      ]
+    },
+    "score_porcini": {
+      "medianMs": 401.05,
+      "p95Ms": 455.76,
+      "samplesMs": [
+        455.76,
+        401.05,
+        408.97,
+        400.85,
+        399.3
+      ]
+    },
+    "score_chanterelle": {
+      "medianMs": 407.25,
+      "p95Ms": 449.33,
+      "samplesMs": [
+        410.75,
+        449.33,
+        406.32,
+        404.77,
+        407.25
+      ]
+    },
+    "score_salmon_milkcap": {
+      "medianMs": 220.28,
+      "p95Ms": 261.62,
+      "samplesMs": [
+        218.77,
+        220.49,
+        219.28,
+        220.28,
+        261.62
+      ]
+    },
+    "ranking_sort": {
+      "medianMs": 21.4,
+      "p95Ms": 25.67,
+      "samplesMs": [
+        25.67,
+        22.49,
+        21.06,
+        21.4,
+        20.64
+      ]
+    },
+    "heat_scale": {
+      "medianMs": 7.42,
+      "p95Ms": 8.58,
+      "samplesMs": [
+        7.64,
+        7.42,
+        8.58,
+        6.87,
+        6.66
+      ]
+    },
+    "overview_1000m": {
+      "medianMs": 40.32,
+      "p95Ms": 54.74,
+      "samplesMs": [
+        54.74,
+        47.67,
+        39.91,
+        40.32,
+        38.98
+      ]
+    }
+  }
+}

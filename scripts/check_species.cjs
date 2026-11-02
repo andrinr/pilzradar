@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 function validateSpecies(species,messages){
- const errors=[],fields=new Set(['name','local','latin','months','temp','host','requiredTree','canopy','note','unmapped','sources','soil']);
+ const errors=[],fields=new Set(['name','local','latin','months','temp','host','requiredTree','canopy','note','unmapped','sources','soil','mapping']);
  const translated=new Map(messages.map(row=>[row[0],row]));
  const text=v=>typeof v==='string'&&v.trim().length>0;
  const seen=new Set();
@@ -11,9 +11,10 @@ function validateSpecies(species,messages){
   for(const key of Object.keys(s))check(fields.has(key),`unsupported field ${key}; adding a field does not add an indicator to the model`);
   for(const key of ['name','local','latin','note'])check(text(s[key]),`${key} must be non-empty`);
   check(!seen.has(s.latin),'duplicate scientific name');seen.add(s.latin);
-  check(Array.isArray(s.months)&&s.months.length>0&&new Set(s.months).size===s.months.length&&s.months.every(m=>Number.isInteger(m)&&m>=1&&m<=12),'months must be unique integers from 1 to 12');
-  check(Array.isArray(s.temp)&&s.temp.length===2&&s.temp.every(t=>Number.isFinite(t)&&t>=-30&&t<=50)&&s.temp[0]<s.temp[1],'temp must be an increasing Celsius pair between -30 and 50');
-  check(['open','closed'].includes(s.canopy),'canopy must be open or closed');
+  check(s.months===null||Array.isArray(s.months)&&s.months.length>0&&new Set(s.months).size===s.months.length&&s.months.every(m=>Number.isInteger(m)&&m>=1&&m<=12),'months must be unique integers from 1 to 12');
+  check(s.temp===null||Array.isArray(s.temp)&&s.temp.length===2&&s.temp.every(t=>Number.isFinite(t)&&t>=-30&&t<=50)&&s.temp[0]<s.temp[1],'temp must be an increasing Celsius pair between -30 and 50');
+  check([null,'open','closed'].includes(s.canopy),'canopy must be open or closed');
+  if(s.mapping!==undefined)check(s.mapping===false&&s.host===null&&s.temp===null&&s.months===null&&s.canopy===null&&!s.soil&&!s.requiredTree,'observation-only profiles must omit score settings');
   if(s.host!==null){
    check(s.host&&typeof s.host==='object'&&!Array.isArray(s.host)&&Object.keys(s.host).sort().join(',')==='beech,conifer,oak,other','host needs exactly beech, oak, conifer and other');
    check(s.host&&Object.values(s.host).every(v=>Number.isFinite(v)&&v>=0&&v<=1)&&Object.values(s.host).some(v=>v>0),'host preferences must be 0–1, with at least one positive');

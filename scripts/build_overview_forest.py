@@ -59,3 +59,7 @@ manifest['metadata']['nationalSimplificationMeters']=100
 pack('overview-forest/index',manifest)
 for key in oldkeys:(ROOT/'data'/f'{key}.js').unlink()
 print(f'Grouped into {len(groups)} bundles at each of two outline resolutions',flush=True)
+
+# Refresh the small categorical overview whenever source outlines are rebuilt.
+import subprocess,sys
+subprocess.run([sys.executable,str(ROOT/"scripts"/"build_mobile_overview.py")],check=True)

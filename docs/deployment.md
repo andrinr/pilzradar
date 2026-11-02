@@ -2,17 +2,33 @@
 
 [Back to shrooms](../README.md)
 
-## Static hosting (recommended)
+## Choose static or a Swiss server
 
-Deploy `_site/` to GitHub Pages or another static host after `npm run build`. The map and browser notebook work without a backend. Saved spots stay in the current browser and origin; use Export / Import to transfer them. Clearing site data removes them.
+Deploy `_site/` to GitHub Pages or another static host after `npm run build:static`. The map and browser notebook work without a backend. Saved spots stay in the current browser and origin; use Export / Import to transfer them. Clearing site data removes them. This build disables API discovery and hides sharing and account-request controls. External map tiles and manual browser weather refresh still work.
 
-## Optional weather backend
+## Recommended low-cost Swiss option (checked 14 October 2026)
 
-Use one Linux VPS with **2 CPU cores, 4 GB RAM and 20 GB or more disk**, Docker Engine and the Compose plugin. The application runs as an unprivileged user behind Caddy. SQLite and the weather cache live in a persistent volume. This is a single-instance deployment; do not run independent replicas against copied databases.
+[Infomaniak VPS Lite](https://www.infomaniak.com/en/hosting/vps-lite) lists a Linux server with **1 vCPU, 2 GB RAM and 20 GB disk for CHF 2.70/month excluding VAT**, paid for 12 months upfront (CHF 32.40/year excluding VAT). This is an unmanaged server: operating system updates and private off-server backups remain our responsibility. There are no included VPS Lite snapshots or availability SLA. This is a launch-size recommendation, not a load-tested capacity guarantee; monitor RAM, disk and response times and upgrade as necessary. Compose limits the application to 1 GB to leave memory for the OS and proxy.
 
-A small European Hetzner cloud server is a suitable starting point. Allow roughly CHF 5–10/month before domain and off-server backups; confirm the current [provider pricing](https://www.hetzner.com/cloud/) and [price adjustments](https://docs.hetzner.com/general/infrastructure-and-availability/price-adjustment/) when ordering. No provider account or paid resource is provisioned by this repository. Any comparable Docker host works.
+The existing Node 24 application and SQLite run behind Caddy using Docker Compose. Keep a single application instance and persistent storage. The shared weather cache and opt-in research records can remain available; personal notebooks remain local.
 
-Free hosts with ephemeral disks or idle shutdown are unsuitable for this configuration: scheduled weather updates need a running process. The browser notebook does not depend on server storage.
+For less server maintenance, [Infomaniak managed Node.js hosting](https://www.infomaniak.com/fr/hebergement/hebergement-nodejs) advertises CHF 10.91/month excluding VAT, with 250 GB and HTTPS. Confirm Node 24 and a persistent SQLite path in the selected plan before deploying there; the Docker instructions below target the VPS.
+
+Our static build occupies approximately 597 MiB. Infomaniak's free 10 MB Starter hosting is too small. [Hosttech shared hosting](https://www.hosttech.ch/webhosting/) starts at CHF 6.90/month with 50 GB and can serve the static files; do not assume this PHP-oriented plan runs our Node backend.
+
+### Domain and purchase
+
+Use a `.ch` domain from a Swiss registrar such as [Infomaniak](https://www.infomaniak.com/en/domains). Choose and confirm the domain before purchase; availability and promotion/renewal prices must be checked in checkout. On 14 October 2026 the registrar reported `shrooms.ch` already reserved. The same search reported `shrooms-map.ch` available at CHF 4.64 for the first year, with the ordinary displayed price CHF 9.89, excluding VAT and optional add-ons. Availability is not a reservation; confirm renewal pricing in checkout. Do not configure `shrooms.ch` unless you own it. Hosting and domain are separate purchases. No account, paid server or domain has been provisioned by these scripts.
+
+### Build a portable deployment archive
+
+```sh
+npm run check
+npm test
+npm run release
+```
+
+This creates `releases/shrooms-server.tar.gz` from an explicit source/data allowlist. It includes current local changes, even before a Git push, and excludes `.storage`, `.env`, browser records, Git history and developer caches. Upload only this archive to the new server and extract it in an empty application directory. Avoid extracting over a live deployment. Then follow the domain and Docker steps below, skipping the Git clone. Subsequent releases should be extracted into separate release directories; keep the same Compose project name (`docker compose -p shrooms ...`) to preserve named data volumes across directories.
 
 ## First deployment
 
@@ -22,7 +38,7 @@ Free hosts with ephemeral disks or idle shutdown are unsuitable for this configu
 4. Clone the repository and configure it:
 
 ```sh
-git clone https://github.com/andrinr/shrooms.git
+git clone https://github.com/andrinr/pilzradar.git
 cd shrooms
 cp .env.example .env
 # Edit DOMAIN in .env; use a hostname without https:// or a trailing slash.
@@ -52,9 +68,9 @@ Production cookies are HttpOnly, SameSite=Lax and Secure. Mutations validate the
 
 The [free weather endpoint](https://open-meteo.com/en/pricing) is restricted to non-commercial use. A supplied commercial key switches the backend to the customer endpoint. Updates run every six hours; incomplete responses retain the last snapshot and failures back off for 15 minutes. Weather older than 48 hours is omitted from scores.
 
-## Legacy server backups
+## Server backups
 
-These preserve old account data, if present. They do not back up browser notebooks; use the notebook’s Export button for those.
+These preserve opt-in research submissions, anonymous feature votes and old account data, if present. Treat backups as sensitive because research records contain precise locations. They do not back up browser notebooks; use the notebook’s Export button for those.
 
 Run an online SQLite backup rather than copying the active database file alone:
 
@@ -76,7 +92,7 @@ docker compose run --rm --no-deps --user root -v "$PWD/backups:/restore:ro" app 
 docker compose up -d app
 ```
 
-Use a known-good backup, then verify sign-in and a saved spot. Weather can be rebuilt automatically; it is not required in the database backup. Test restoration on a separate environment before relying on a backup schedule.
+Use a known-good backup, then verify health and the contribution and feature-request tables. Weather can be rebuilt automatically; it is not required in the database backup. Test restoration on a separate environment before relying on a backup schedule.
 
 ## Updates
 
@@ -91,8 +107,8 @@ docker compose logs --tail=50 app
 
 For rollback, check out the recorded release commit and rebuild. Future schema-changing releases may require restoring the matching backup; do not assume downgrades are compatible. The current schema is SQLite `user_version=1`.
 
-Caddy and Node image tags receive updates on rebuild. Monitor disk space, `/api/health`, weather freshness and backup completion. Rate limits are process-local and reset on restart. Add upstream abuse controls if opening registration to a large audience.
+Caddy and Node image tags receive updates on rebuild. Monitor disk space, `/api/health`, weather freshness and backup completion. Rate limits are process-local and reset on restart. Add upstream abuse controls for anonymous submissions if traffic grows. Review and remove research records according to your retention policy; no public read or user withdrawal endpoint is provided.
 
 ## Static alternative
 
-`npm run build` produces `_site/` for GitHub Pages or any static host. No private data or backend files are included. Accounts are unavailable there. The full backend must run at the site's origin; cross-origin API hosting is deliberately unsupported.
+`npm run build:static` produces `_site/` for GitHub Pages or any static host. No private data or backend files are included. Accounts are unavailable there. The full backend must run at the site's origin; cross-origin API hosting is deliberately unsupported.

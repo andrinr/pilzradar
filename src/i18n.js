@@ -32,7 +32,8 @@
  window.SHROOMS_I18N={lang,locale,t,languages,date};
  if(typeof document==='undefined')return;
  document.documentElement.lang=lang;
- document.title=t('shrooms — follow the fungi');
+ const guide=document.getElementById('species-guide');if(guide)guide.href=`./${lang}/mushrooms.html`;
+ document.title=t('Swiss mushroom habitat map – pilzradar.ch');
  const description=document.querySelector('meta[name=description]');if(description)description.content=t(description.content);
  document.addEventListener('invalid',event=>{const field=event.target;field.setCustomValidity('');const message=field.validity.valueMissing?'Please complete this field.':field.validity.tooShort?`Use at least ${field.minLength} characters.`:field.validity.patternMismatch&&field.name==='username'?'Use 3–32 letters, numbers or underscores for your username.':'Please check this field.';field.setCustomValidity(t(message));},true);
  document.addEventListener('input',event=>event.target.setCustomValidity?.(''));

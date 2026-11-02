@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-02",
+  "setup": {
+    "viewport": [
+      390,
+      844
+    ],
+    "appBandwidthBytesPerSecond": 204800,
+    "responseDelayMs": 100,
+    "coldAppCache": true,
+    "cpuThrottled": false,
+    "note": "Single desktop-browser run at phone viewport. Shared local static-server cap covers app assets/data; external swisstopo requests are not shaped. Not field mobile Core Web Vitals."
+  },
+  "bytes": {
+    "nationalIndexBefore": 3595394,
+    "nationalIndexAfter": 1985259,
+    "overviewVectorAllChunks": 8869312,
+    "overviewRasterAllChunks": 1347743,
+    "offlineSvgAvoidedOnOnlineMap": 1346404
+  },
+  "baseline": {
+    "elapsedMs": 143423,
+    "samples": {
+      "workerScore": [
+        25,
+        299
+      ],
+      "mainCommit": [
+        12,
+        36
+      ],
+      "recompute": [
+        912,
+        341
+      ],
+      "interactive": [
+        24616
+      ],
+      "overviewReady": [
+        54030,
+        54030,
+        54259
+      ]
+    },
+    "longTasks": [
+      {
+        "at": 23334,
+        "ms": 74
+      },
+      {
+        "at": 23527,
+        "ms": 109
+      },
+      {
+        "at": 24531,
+        "ms": 86
+      },
+      {
+        "at": 54381,
+        "ms": 57
+      }
+    ],
+    "frameWorstMs": 9,
+    "frameP95Ms": 9
+  },
+  "optimized": {
+    "elapsedMs": 63011,
+    "samples": {
+      "workerScore": [
+        285
+      ],
+      "mainCommit": [
+        13
+      ],
+      "recompute": [
+        1118
+      ],
+      "interactive": [
+        16913
+      ],
+      "overviewReady": [
+        10298,
+        10409
+      ]
+    },
+    "longTasks": [
+      {
+        "at": 15532,
+        "ms": 185
+      },
+      {
+        "at": 16813,
+        "ms": 101
+      }
+    ],
+    "frameWorstMs": 9,
+    "frameP95Ms": 9
+  }
+}

@@ -1,8 +1,8 @@
 FROM node:24-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-COPY scripts/package_site.cjs scripts/package_site.cjs
-COPY index.html styles.css favicon.svg forest-magic.svg .nojekyll LICENSE THIRD_PARTY_NOTICES.md ./
+COPY scripts/package_site.cjs scripts/build_search_pages.cjs scripts/social_metadata.cjs scripts/compact_index.cjs scripts/
+COPY index.html privacy.html styles.css design.css favicon.svg forest-magic.svg social-preview.png .nojekyll LICENSE THIRD_PARTY_NOTICES.md ./
 COPY src src
 COPY vendor vendor
 COPY data data

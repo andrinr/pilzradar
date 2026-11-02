@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-02",
+  "tool": "PageSpeed Insights / Lighthouse 13.6.0",
+  "device": "Emulated Moto G Power, slow 4G",
+  "fieldCoreWebVitals": "No data",
+  "map": {
+    "url": "https://dml79psi3sb8a.cloudfront.net/",
+    "report": "https://pagespeed.web.dev/analysis/https-dml79psi3sb8a-cloudfront-net/p782klrzho?form_factor=mobile",
+    "scores": {
+      "performance": 72,
+      "accessibility": 95,
+      "bestPractices": 96,
+      "seo": 100
+    },
+    "fcpMs": 1661,
+    "lcpMs": 1661,
+    "totalBlockingTimeMs": 1533,
+    "cls": 0,
+    "speedIndexMs": 2839
+  },
+  "guide": {
+    "url": "https://dml79psi3sb8a.cloudfront.net/de/species/chanterelle.html",
+    "report": "https://pagespeed.web.dev/analysis/https-dml79psi3sb8a-cloudfront-net-de-species-chanterelle-html/kbct2x7tdb?form_factor=mobile",
+    "scores": {
+      "performance": 100,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100
+    },
+    "fcpMs": 797,
+    "lcpMs": 797,
+    "totalBlockingTimeMs": 0,
+    "cls": 0,
+    "speedIndexMs": 797
+  },
+  "limits": "Single lab runs, not field Core Web Vitals or guarantees of Google indexing/rankings."
+}

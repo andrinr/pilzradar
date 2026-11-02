@@ -52,7 +52,7 @@ test('all generated cells have valid, bounded source values and scores',()=>{
   assert.ok(c.area===.25);assert.ok(c.forest>=0&&c.forest<=100);
   assert.ok(c.weather>=0&&c.weather<data.weatherPoints.length);
   assert.ok(c.slope===null||(c.slope>=0&&c.slope<90));
-  for(const s of Object.values(species)){
+  for(const s of Object.values(species).filter(s=>s.mapping!==false)){
    const score=model.score(c,s,wet,autumn).value;assert.ok(Number.isFinite(score)&&score>=0&&score<=100);
   }
   const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
@@ -104,7 +104,7 @@ test('regional weather interpolation removes nearest-anchor steps and omits miss
 });
 
 test('factor weights and multipliers reconstruct the species score',()=>{
- for(const profile of Object.values(species))for(const c of [cell,{forest:90}, {...cell,soilPh:[5,4,6]}]){
+ for(const profile of Object.values(species).filter(s=>s.mapping!==false))for(const c of [cell,{forest:90}, {...cell,soilPh:[5,4,6]}]){
   const result=model.score(c,profile,wet,autumn),factors=Object.values(result.factors);
   assert.ok(Math.abs(factors.reduce((sum,f)=>sum+f.share,0)-1)<1e-10);
   assert.equal(Math.round(100*factors.reduce((product,f)=>product*f.multiplier,1)),result.value);

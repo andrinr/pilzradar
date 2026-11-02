@@ -13,3 +13,17 @@ test('successful writes notify map listeners; failed writes do not',()=>{
  const storage=memory(),store=context.SHROOMS_NOTEBOOK.create(storage);const saved=store.save(spot);assert.equal(events,1);
  store.remove(saved.id);assert.equal(events,2);storage.setItem=()=>{throw Error('full');};assert.throws(()=>store.save(spot));assert.equal(events,2);
 });
+
+test('sightings round-trip, reports count actual finds, and old backups remain readable',()=>{
+ const a=create(memory()),saved=a.save(spot);assert.deepEqual(saved.observations,[]);
+ const first={id:'find-1',species:'porcini',date:'2026-01-01',count:3,notes:'Under beech'};
+ a.save({...saved,observations:[first,{...first,id:'find-2',species:'unknown',count:2}]});
+ const b=create(memory());b.import(a.export());assert.deepEqual(b.read(),a.read());
+ assert.deepEqual(require('../src/notebook-store.js').report(b.read()),{places:1,records:2,total:5,species:{porcini:3,unknown:2}});
+ b.import(a.export());assert.equal(b.read()[0].observations.length,2);
+ b.import(JSON.stringify({spots:[{...saved,observations:[{...first,id:'find-3',count:7}]}]}));assert.equal(b.read()[0].observations.length,3);
+ const before=b.export();for(const patch of [{date:'2026-02-30'},{date:'2099-01-01'},{count:0},{count:1.5},{notes:'x'.repeat(501)}])assert.throws(()=>b.save({...saved,observations:[{...first,...patch}]}));
+ assert.deepEqual(JSON.parse(b.export()).spots,JSON.parse(before).spots);
+ assert.throws(()=>b.save({...saved,observations:[first,first]}));
+ assert.throws(()=>b.save({...saved,observations:Array.from({length:101},(_,i)=>({...first,id:String(i)}))}));
+});

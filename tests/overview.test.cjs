@@ -1,15 +1,15 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 const polygon={type:'MultiPolygon',coordinates:[[[[250,120],[260,120],[260,140],[250,140],[250,120]],[[253,125],[257,125],[257,130],[253,130],[253,125]]]]};
 function fixture(){
- const fills=[],events={},active=new Set(),loaded=[];let redraws=0;
+ const fills=[],events={},active=new Set(),loaded=[],frames=[];let redraws=0;
  const ctx={scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(rule){fills.push(rule);},stroke(){}};
- const context={window:{devicePixelRatio:2},document:{createElement:()=>({getContext:()=>ctx})}};
+ const context={requestAnimationFrame:fn=>frames.push(fn),window:{devicePixelRatio:2},document:{createElement:()=>({getContext:()=>ctx})}};
  vm.createContext(context);vm.runInContext(fs.readFileSync('src/overview.js','utf8'),context);
- function Grid(){}Grid.prototype.onAdd=function(){};Grid.prototype.onRemove=function(){};
- Grid.extend=methods=>{function Layer(){Object.assign(this,methods);this.redraw=()=>redraws++;}return Layer;};
+ function Grid(){}Grid.prototype.onAdd=function(){};Grid.prototype.onRemove=function(){};Grid.prototype.redraw=function(){redraws++;return this;};
+ Grid.extend=methods=>{function Layer(){Object.assign(this,methods);this.on=()=>{};this.off=()=>{};}return Layer;};
  const map={project:([lat,lon])=>({x:lon,y:-lat}),unproject:([x,y])=>({lng:x,lat:-y}),getZoom:()=>10,hasLayer:l=>active.has(l),on:(e,fn)=>events[e]=fn,off:e=>delete events[e]};
  const layer=context.window.SHROOMS_OVERVIEW.create({GridLayer:Grid},map,{manifest:{tiles:[{key:'fine',coarseKey:'coarse',bounds:[[120,250],[140,260]]}]},load:async key=>{loaded.push(key);return [{id:'a',geometry:polygon}];}});active.add(layer);layer.onAdd(map);
- return {layer,map,events,fills,loaded,contains:context.window.SHROOMS_OVERVIEW.contains,redraws:()=>redraws};
+ return {paint(){const pending=frames.splice(0);pending.forEach(fn=>fn());},layer,map,events,fills,loaded,contains:context.window.SHROOMS_OVERVIEW.contains,redraws:()=>redraws};
 }
 test('forest-shaped overview renders across tile seams and respects holes when clicked',async()=>{
  const f=fixture(),items=[{members:['a'],value:50}];let selected;
@@ -38,4 +38,13 @@ test('bundled outlines reference real overview cells and stay inside their spati
   for(const poly of f.geometry.coordinates)for(const ring of poly){assert.ok(ring.length>=4);assert.deepEqual(ring[0],ring.at(-1));for(const [lon,lat] of ring){assert.ok(Number.isFinite(lon)&&Number.isFinite(lat));assert.ok(lat>=tile.bounds[0][0]-.00001&&lat<=tile.bounds[1][0]+.00001&&lon>=tile.bounds[0][1]-.00001&&lon<=tile.bounds[1][1]+.00001);}}
  }
  assert.ok(count>150000);
+});
+
+test('recolouring retains one painted tile buffer until replacement is ready',()=>{
+ const f=fixture();let copies=0,removed=0,painted=0;
+ const oldCanvas={},copy={style:{},setAttribute(){},querySelectorAll:()=>[{getContext:()=>({drawImage(source){assert.equal(source,oldCanvas);painted++;}})}],remove(){removed++;}};
+ f.layer.getContainer=()=>({isConnected:true,cloneNode(){copies++;return copy;},querySelectorAll:()=>[oldCanvas],parentNode:{insertBefore(){}}});
+ f.layer.redraw();assert.equal(painted,1);assert.equal(removed,0);
+ f.layer.redraw();assert.equal(copies,1,'Rapid updates retain only one buffer');
+ f.layer.releaseBuffer();assert.equal(removed,0);f.paint();assert.equal(removed,0);f.paint();assert.equal(removed,1);assert.equal(f.layer.retainedTiles,null);
 });

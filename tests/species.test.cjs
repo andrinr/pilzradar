@@ -17,3 +17,26 @@ test('spruce and pine specialists respond to their own mapped host and omit unkn
  assert.ok(score(pine,species.slippery,null,date).value>score(spruce,species.slippery,null,date).value);
  for(const profile of [species.spruce_milkcap,species.slippery])assert.equal(score(cell,profile,null,date).factors.tree.value,null);
 });
+
+test('new evidence-limited profiles omit unsupported curves and report used weather correctly',()=>{
+ const context={window:{},Intl,Date};vm.runInNewContext(fs.readFileSync('src/scoring.js','utf8'),context);const score=context.window.SHROOMS_SCORE.score;
+ const cell={forest:100,treeKnown:1,conifer:100,broadleaf:0,canopy:85,canopyKnown:1,slope:5,aspect:0};
+ for(const id of ['summer_bolete','bronze_bolete','pine_bolete','granulated_bolete','bovine_bolete','salmon_milkcap','amethyst','vesca']){
+  const profile=species[id],result=score(cell,profile,{rain14:50,soil:.3,humidity:85,temp7:15},new Date('2026-09-23T12:00:00Z'));
+  assert.ok(Number.isFinite(result.value));assert.equal(result.factors.temperature.share,0);assert.equal(result.factors.canopy.share,0);
+  if(profile.months===null)assert.equal(result.factors.season.share,0);
+  if(profile.requiredTree)assert.equal(result.factors.tree.share,0);
+  assert.equal(result.live,true);assert.ok(Math.abs(Object.values(result.factors).reduce((s,f)=>s+f.share,0)-1)<1e-9);
+ }
+ const fir=species.salmon_milkcap;
+ assert.ok(score({...cell,fir:100},fir,null).value>score({...cell,fir:0},fir,null).value);
+});
+test('record-only psychoactive entries never produce habitat scores; fly agaric has an experimental woodland profile',()=>{
+ const context={window:{},Intl,Date};vm.runInNewContext(fs.readFileSync('src/scoring.js','utf8'),context);
+ for(const id of ['liberty_cap','wavy_cap']){
+  assert.equal(species[id].mapping,false);
+  const score=context.window.SHROOMS_SCORE.score({forest:100,slope:0},species[id],{soil:.4,temp7:15,rain14:60,humidity:90});
+  assert.equal(score.value,null);assert.equal(score.completeness,0);assert.deepEqual(Object.keys(score.factors),[]);
+ }
+ assert.equal(species.fly_agaric.latin,'Amanita muscaria');assert.equal(species.fly_agaric.temp,null);
+});

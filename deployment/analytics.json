@@ -1,0 +1,6 @@
+{
+  "provider": "Cloudflare Web Analytics",
+  "enabled": true,
+  "hostname": "www.pilzradar.ch",
+  "token": "2a150edd503e44f6b590534b3d184b11"
+}

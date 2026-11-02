@@ -1,0 +1,55 @@
+{
+  "elapsedMs": 8238,
+  "samples": {
+    "workerScore": [
+      21,
+      340
+    ],
+    "mainCommit": [
+      14,
+      48
+    ],
+    "recompute": [
+      107,
+      439
+    ],
+    "interactive": [
+      523
+    ],
+    "overviewReady": [
+      645,
+      645,
+      739,
+      756,
+      770
+    ]
+  },
+  "longTasks": [
+    {
+      "at": 174,
+      "ms": 59
+    },
+    {
+      "at": 237,
+      "ms": 101
+    },
+    {
+      "at": 427,
+      "ms": 97
+    },
+    {
+      "at": 610,
+      "ms": 58
+    },
+    {
+      "at": 668,
+      "ms": 54
+    },
+    {
+      "at": 990,
+      "ms": 54
+    }
+  ],
+  "frameWorstMs": 9,
+  "frameP95Ms": 9
+}

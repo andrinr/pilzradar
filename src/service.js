@@ -1,5 +1,6 @@
 /* Same-origin API discovery; static and file previews remain supported. */
 window.SHROOMS_SERVICE=(()=>{
+ if(window.SHROOMS_STATIC)return {ready:Promise.resolve(null),request:async()=>{throw new Error('Server features are disabled.');},config:null};
  let config;
  const ready=(async()=>{
   if(!/^https?:$/.test(location.protocol))return null;

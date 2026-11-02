@@ -84,3 +84,15 @@ and legacy regional API data still use the older swissTLMRegio-derived bundles.
 The `soilPh` fields joined into habitat tiles and regional indexes are derived from the same WSL / EnviDat 484 soil rasters and retain their CC BY-SA 4.0 attribution and license. See `docs/SOIL.md`.
 
 `data/overview-forest/` contains simplified swissTLM3D forest footprints derived from the 2026-02 forest mask. Attribution: © swisstopo, under the swisstopo open-data terms. These outlines do not increase the resolution of the underlying habitat scores.
+
+## WSL canopy openness and soil context
+
+**Bischof, S., Ginzler, C., Marty, M. & Zellweger, F. (2026).** Switzerland-wide maps of sky view factor (canopy openness in forests) at 5 m resolution, NFI VHM 2024. EnviDat, [doi:10.16904/envidat.744](https://doi.org/10.16904/envidat.744), **CC BY 4.0**. `data/environment/tiles/` contains derived summer and winter sky-view means, restricted by the attributed swissTLM3D forest mask and aggregated to 50 m. Acquisition years vary. Sky view is hemispheric openness, not vertical crown cover. These transformations are by shrooms, not the source authors.
+
+**Baltensweiler, A., Walthert, L., Hanewinkel, M., Zimmermann, S. & Nussbaum, M. (2024).** Soil property maps for the Swiss forest. EnviDat, [doi:10.16904/envidat.484](https://doi.org/10.16904/envidat.484), **CC BY-SA 4.0**. The environmental tiles sample native 25 m predictions and their 90% intervals for 0–5 cm clay/sand and minimum expected soil depth. Values are rounded to 0.1. The derived environmental bundles retain **CC BY-SA 4.0**; the MIT code license does not relicense these data. Raw-resource URLs, SHA-256 hashes and processing definitions are packed in `data/environment/index.js` (decoded as `environment/index`).
+
+## MeteoSwiss spatial climate analyses
+
+**Source: MeteoSwiss** — [Spatial climate analyses](https://opendatadocs.meteoswiss.ch/c-climate-data/c3-ground-based-climate-data), [terms of use](https://opendatadocs.meteoswiss.ch/general/terms-of-use). `data/environment/climate.js` contains derived complete-window 14-day precipitation totals and 7-day mean temperature/relative-sunshine summaries from 1 km daily preliminary grids. Each property retains its own extent. shrooms rounds to 0.1 and preserves missing values. The source date cutoff, quality, daily resource URLs and hashes are included in the bundle. These are dated statistical analyses, not local forest measurements or endorsed mushroom predictions.
+
+The national dominant-tree map ([Koch et al., 2024, EnviDat 506](https://doi.org/10.16904/envidat.506)) remains **unimported**: source access is by request. No values were digitized from its public preview.

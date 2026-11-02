@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-02",
+  "runtime": "window.SHROOMS_STATIC=true;window.SHROOMS_BINARY=true;window.SHROOMS_DATA_VERSION=\"8f4b419055a5221f\";\nwindow.SHROOMS_CODE_VERSION=\"3e0d6bacaaeff0c4\";\n",
+  "sources": {
+    "src/app.js": "3a48e7a49f28713db4d15088cbbf58ad9d9cb87fe552b94ccf1d4e48000a0248",
+    "src/scoring.js": "254b5ed50416c5807c46960e031ad98431dbad8bda5f58324b58b65cedbb7fe3",
+    "src/compute.js": "1607cc62d008471a541d1f061be95810eec088a633a7918b03bec4e60a10a664",
+    "src/scoring-worker.js": "20f0a85e9783c219b6a85ee2d6da753713edfa2ab69b73bc2481f54f97e76940",
+    "src/overview.js": "bbe532d264eb6795a18de1a53fa411dfbc7239c280f3a252e2c382c6b8b1e91e",
+    "src/overview-worker.js": "10cff4ea051af6e9e0e3040edd93c2e35bf80008ce284a2e923069e221c4310e",
+    "src/ranking.js": "3fa7aacb3b9e8f258d0b430f7d6663aa32fe39b4359cbfed9748a84de3f25038",
+    "src/perf.js": "5d6698e311e0883f171308f4359fb5645cde76a540fee7a6d436cca998c573cf"
+  }
+}

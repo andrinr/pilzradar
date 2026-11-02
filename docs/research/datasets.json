@@ -1,0 +1,164 @@
+{
+  "reviewed": "2026-11-02",
+  "scope": "Verified source inventory. Canopy openness and soil texture/depth are now imported as optional static context; host-tree access remains restricted. MeteoSwiss context is documented in docs/environment-data.md.",
+  "datasets": [
+    {
+      "id": "tree-species-map-of-switzerland",
+      "title": "Tree species map of Switzerland",
+      "metadata_url": "https://www.envidat.ch/api/action/package_show?id=tree-species-map-of-switzerland",
+      "landing_page": "https://www.envidat.ch/metadata/tree-species-map-of-switzerland",
+      "license_id": "cc-by-sa",
+      "metadata_modified": "2025-03-04T10:59:31.905900",
+      "resources": [
+        {
+          "title": "map.png",
+          "url": "https://www.envidat.ch/dataset/bf5a19da-7b55-4149-8293-08fd0af29969/resource/4645f173-dded-4fff-9fb0-d8513ea8be6f/download/map.png",
+          "format": "PNG",
+          "size": 5638141
+        }
+      ],
+      "integration": "access-required"
+    },
+    {
+      "id": "soil-property-maps-for-the-swiss-forest",
+      "title": "Soil property maps for the Swiss forest",
+      "metadata_url": "https://www.envidat.ch/api/action/package_show?id=soil-property-maps-for-the-swiss-forest",
+      "landing_page": "https://www.envidat.ch/metadata/soil-property-maps-for-the-swiss-forest",
+      "license_id": "cc-by-sa",
+      "metadata_modified": "2024-02-26T11:55:11.891232",
+      "resources": [
+        {
+          "title": "SoilMaps_description.xlsx",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/5f08172f-967c-4aa3-beaf-a81338290f9e/download/soilmaps_description.xlsx",
+          "format": "XLSX",
+          "size": 11429
+        },
+        {
+          "title": "clay_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/1616b34f-542a-4622-9bdd-e454500393c8/download/clay_maps.zip",
+          "format": "ZIP",
+          "size": 55978125
+        },
+        {
+          "title": "clay_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/1059745c-d83e-4f31-b723-07cce9fb2104/download/clay_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 105083064
+        },
+        {
+          "title": "density_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/d5a87cce-64aa-40db-aa02-589fb89c7984/download/density_maps.zip",
+          "format": "ZIP",
+          "size": 172162688
+        },
+        {
+          "title": "density_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/5886ee25-bfb6-44a2-97a9-00d5c968d1c9/download/density_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 143926943
+        },
+        {
+          "title": "depth_map.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/7c58ee27-6410-41bc-b533-1c3842032878/download/depth_map.zip",
+          "format": "ZIP",
+          "size": 37183065
+        },
+        {
+          "title": "depth_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/b4dc7b7b-e800-45d4-8d03-997968710b56/download/depth_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 69351779
+        },
+        {
+          "title": "gravel_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/c799d7c4-ae83-402d-976d-f23ef7021ad7/download/gravel_maps.zip",
+          "format": "ZIP",
+          "size": 80316578
+        },
+        {
+          "title": "gravel_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/d7b44437-7fc2-4750-a322-e26887a830c6/download/gravel_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 89436761
+        },
+        {
+          "title": "pH_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/639353b5-92a5-43d1-b0ec-4ce8ca7773c0/download/ph_maps.zip",
+          "format": "ZIP",
+          "size": 129172696
+        },
+        {
+          "title": "pH_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/c5bea000-de46-4b93-8de8-f246c6135b9f/download/ph_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 192523204
+        },
+        {
+          "title": "sand_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/1a2addd8-1b83-4502-b015-43face6c519b/download/sand_maps.zip",
+          "format": "ZIP",
+          "size": 65109556
+        },
+        {
+          "title": "sand_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/25bdf03f-226b-4274-8867-6553b2c12bd3/download/sand_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 116700070
+        },
+        {
+          "title": "soc_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/d80078ce-cf36-4590-8f01-e79de67f8b2f/download/soc_maps.zip",
+          "format": "ZIP",
+          "size": 144898851
+        },
+        {
+          "title": "soc_uncertainty_maps.zip",
+          "url": "https://www.envidat.ch/dataset/9a0b1daa-a4e0-4c62-b348-ec23354105c6/resource/a214d4d2-72bd-451d-8fd5-a461b3a78b28/download/soc_uncertainty_maps.zip",
+          "format": "ZIP",
+          "size": 222671274
+        }
+      ],
+      "integration": "optional-context"
+    },
+    {
+      "id": "switzerland-wide-maps-of-sky-view-factor-canopy-openness-in-forests-at-5-m-resol",
+      "title": "Switzerland-wide maps of sky view factor (canopy openness in forests) at 5 m resolution (as of NFI VHM 2024)",
+      "metadata_url": "https://www.envidat.ch/api/action/package_show?id=switzerland-wide-maps-of-sky-view-factor-canopy-openness-in-forests-at-5-m-resol",
+      "landing_page": "https://www.envidat.ch/metadata/switzerland-wide-maps-of-sky-view-factor-canopy-openness-in-forests-at-5-m-resol",
+      "license_id": "cc-by",
+      "metadata_modified": "2026-03-24T09:23:31.377860",
+      "resources": [
+        {
+          "title": "Sky_view_factor_CH_LI_2024.tif",
+          "url": "https://www.envidat.ch/dataset/fa3b2b7f-c0f0-4fd0-b04e-78b0b60ebb4b/resource/ca5d0cc0-1838-4e3d-90da-4c5e0b1992ff/download/map_chli.tif",
+          "format": "tif",
+          "size": 1642824991
+        },
+        {
+          "title": "Lidar_Befliegungsjahr_VHM_2024.png",
+          "url": "https://www.envidat.ch/dataset/fa3b2b7f-c0f0-4fd0-b04e-78b0b60ebb4b/resource/d55237b2-558a-49c5-a26d-7c558f5a54c8/download/lidar_befliegungsjahr_vhm2024.png",
+          "format": "PNG",
+          "size": 536750
+        }
+      ],
+      "integration": "optional-context"
+    },
+    {
+      "id": "swissrad10-hourly-light-availability-maps-at-10-m-resolution-over-switzerland",
+      "title": "SwissRad10 Hourly light availability maps at 10 m resolution over Switzerland",
+      "metadata_url": "https://www.envidat.ch/api/action/package_show?id=swissrad10-hourly-light-availability-maps-at-10-m-resolution-over-switzerland",
+      "landing_page": "https://www.envidat.ch/metadata/swissrad10-hourly-light-availability-maps-at-10-m-resolution-over-switzerland",
+      "license_id": "CC0-1.0",
+      "metadata_modified": "2026-09-18T13:41:23.154317",
+      "resources": [
+        {
+          "title": "Data Download",
+          "url": "https://envicloud.wsl.ch/#/?bucket=https://zhc-c.s3.cloud.switch.ch/envidat-doi/&prefix=10.16904_envidat.544/SwissRad10",
+          "format": "netcdf and geotiff",
+          "size": null
+        }
+      ],
+      "integration": "not-imported"
+    }
+  ]
+}

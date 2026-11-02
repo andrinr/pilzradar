@@ -55,13 +55,13 @@ test('failed chunk loads reject and permit retry',async()=>{
 });
 
 test('HTML assets and navigation anchors resolve under a GitHub Pages subpath',()=>{
- const html=fs.readFileSync('index.html','utf8');
+ const html=fs.readFileSync('_site/index.html','utf8');
  const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
  for(const [,reference] of html.matchAll(/\b(?:src|href)="([^"]+)"/g)){
   if(/^(https?:|mailto:|data:)/.test(reference))continue;
   if(reference.startsWith('#')){assert.ok(ids.has(reference.slice(1)),reference);continue;}
   assert.ok(!reference.startsWith('/'),`Root-relative path breaks project Pages: ${reference}`);
-  assert.ok(fs.existsSync(path.resolve(reference.split(/[?#]/)[0])),`Missing asset: ${reference}`);
+  assert.ok(fs.existsSync(path.resolve('_site',reference.split(/[?#]/)[0])),`Missing asset: ${reference}`);
  }
 });
 
@@ -99,4 +99,11 @@ test('protected forest reserve overlay loads with named polygons and source prov
   const polygons=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
   for(const polygon of polygons)for(const ring of polygon){assert.ok(ring.length>=4);assert.deepEqual(ring[0],ring[ring.length-1]);}
  }
+});
+
+test('explicit static mode never discovers or calls server APIs',async()=>{
+ const context={window:{SHROOMS_STATIC:true},fetch(){assert.fail('static mode must not contact an API');},Promise};vm.createContext(context);
+ vm.runInContext(fs.readFileSync('src/service.js','utf8'),context);
+ assert.equal(await context.window.SHROOMS_SERVICE.ready,null);
+ await assert.rejects(context.window.SHROOMS_SERVICE.request('contributions'),/disabled/);
 });
