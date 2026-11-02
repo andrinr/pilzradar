@@ -1,0 +1,4 @@
+# Keep the ACME HTTP challenge reachable for certificate renewal.
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+RewriteRule ^ https://www.pilzradar.ch%{REQUEST_URI} [R=301,L,NE]

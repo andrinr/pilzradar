@@ -15,8 +15,8 @@
     "registrar": "Infomaniak",
     "searchConsoleVerified": true,
     "websiteHttpsVerified": true,
-    "apexHttpsVerified": false,
-    "apexStatus": "Infomaniak forwarding has a self-signed TLS certificate; HTTPS apex still needs correction",
+    "apexHttpsVerified": true,
+    "apexStatus": "Verified HTTP and HTTPS 301 redirects from pilzradar.ch to https://www.pilzradar.ch, preserving paths and query strings, via free Infomaniak Starter hosting.",
     "validationRecords": [
       {
         "name": "_bccb6c87ff0f6e174ad9bed1ea1c0ebe.pilzradar.ch",
@@ -27,6 +27,20 @@
         "target": "_bea8367082d067fae82f5834e39ccd9e.wzccmgtwzk.acm-validations.aws"
       }
     ],
-    "sitemapStatus": "Google processed https://www.pilzradar.ch/sitemap.xml without errors; 116 pages discovered"
+    "sitemapStatus": "Google processed https://www.pilzradar.ch/sitemap.xml without errors; 116 pages discovered",
+    "apexRedirect": {
+      "provider": "Infomaniak Starter",
+      "monthlyChf": 0,
+      "hostingId": 850609,
+      "siteId": 1548679,
+      "ipv4": "128.65.195.180",
+      "ttlSeconds": 300,
+      "certificate": "Lets Encrypt",
+      "canonicalTarget": "https://www.pilzradar.ch",
+      "httpRedirectVerified": true,
+      "httpsRedirectVerified": true,
+      "starterWwwAliasRemoved": true,
+      "verifiedDate": "2026-11-02"
+    }
   }
 }

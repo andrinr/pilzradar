@@ -45,18 +45,16 @@ The $5 monthly AWS budget is an account-wide warning, not an enforced spending c
 
 On the Free plan, use the managed CachingOptimized policy (minimum TTL one second); custom cache policies require a higher plan. Send `Cache-Control: no-cache` for index.html and `public,max-age=3600` for assets, then invalidate the distribution after a release. The one-second minimum means HTML is not guaranteed to revalidate on every request. Never upgrade the pricing plan automatically.
 
-Verified live on 2026-11-02 at [the public map](https://dml79psi3sb8a.cloudfront.net/). Run `npm run check:deployed` after publishing: it checks release fingerprints, ten real datasets, HTTPS and security/cache headers, and blocked anonymous S3 access against the local `_site/` build. Browser checks also covered mobile layout, species switching, environmental context and 50 m forest detail.
+Verified live on 2026-11-02 at [the public map](https://dml79psi3sb8a.cloudfront.net/). Run `npm run check:deployed` after publishing: it checks release fingerprints, twelve real datasets, HTTPS and permanent bare-domain redirects, security/cache headers, all 116 crawlable pages, and blocked anonymous S3 access against the local `_site/` build. Browser checks also covered mobile layout, species switching, environmental context and 50 m forest detail.
 
-## Custom domain — pending activation, 2026-11-02
+## Custom domain — verified 2026-11-02
 
-Infomaniak lists `pilzradar.ch` through 2027-10-31. The account has a paid TWINT invoice covering the domain and DNS/Privacy options; do not repeat checkout. Renewal Warranty is disabled. Public DNS delegation was not yet visible at the last check, although Infomaniak's authoritative server returned the newly configured records.
+The canonical website is [https://www.pilzradar.ch/](https://www.pilzradar.ch/), served by CloudFront. Infomaniak remains the domain registrar and DNS provider. The domain is registered through 2027-10-31; Renewal Warranty is disabled.
 
-Prepared at Infomaniak: `www` CNAME to the existing CloudFront hostname, both ACM validation CNAMEs recorded in `deployment/aws.json`, and a 301 redirect from the bare domain to `https://www.pilzradar.ch`. Root HTTPS forwarding still needs verification; a redirect target using HTTPS does not by itself prove TLS on the redirecting host.
+`www` is a CNAME to the existing CloudFront hostname. The issued ACM certificate is attached to CloudFront. Preserve both ACM validation CNAMEs in `deployment/aws.json` and the Google Search Console verification TXT record.
 
-The CloudFront Add domain wizard requested a non-wildcard certificate for both names in us-east-1 and is waiting for DNS validation. The distribution's aliases and TLS certificate have **not** yet been changed. After public delegation works: validate the certificate, complete the wizard, verify both HTTPS names and HTTP redirects, then update the canonical deployment URL. The current CloudFront URL remains the verified live address.
+The bare domain uses the **free Infomaniak Starter plan**, solely for a permanent redirect to www. Its A record is `128.65.195.180` with a 300-second TTL. The obsolete apex AAAA and old forwarding TXT values were removed. Starter's Let's Encrypt certificate secures the source hostname; both HTTP and HTTPS return 301 while preserving paths and query strings. The main AWS website, www CNAME, email records and DNSSEC configuration were retained.
 
-## Domain connection update — 2026-11-02
+The automatically added www alias was removed from Starter **without deleting DNS entries**. Certificate issuance otherwise attempted to validate the AWS-hosted www name. Keep only the bare domain on this redirect hosting. Redirect files and maintenance instructions are in [deployment/infomaniak-apex](../deployment/infomaniak-apex/README.md); the ACME challenge path is excluded from redirects for automatic certificate renewal.
 
-Public delegation is active and the personal Google account has verified ownership of the Domain property through an additional TXT record. Keep that record in Infomaniak; it is not a tracking script. The existing ACM certificate is issued and attached to CloudFront for both `pilzradar.ch` and `www.pilzradar.ch`. `https://www.pilzradar.ch/` returns HTTP 200 with valid TLS, so it is now the canonical release origin.
-
-The bare domain still points at Infomaniak's forwarding service. Its HTTPS endpoint returned a self-signed certificate during verification; do not bypass the warning or call the bare HTTPS address ready. Resolve root-domain HTTPS before using it in public links. An HTTPS redirect destination alone does not provide a certificate on the source. Existing CloudFront links remain available. No Google Analytics was enabled. Optional Cloudflare aggregate measurement is documented in [analytics.md](analytics.md).
+The original CloudFront address remains available. Optional Cloudflare aggregate measurement is documented in [analytics.md](analytics.md).
