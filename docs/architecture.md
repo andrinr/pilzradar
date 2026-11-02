@@ -1,5 +1,15 @@
 # Architecture
 
+## Production: static frontend
+
+Pilzradar is deployed as static files on private S3 behind CloudFront. There is no application server, account system or observation-upload API in production. The browser loads regional gzip chunks on demand; workers decode and score them, and LOD renderers keep map navigation responsive. Wheel gestures scale the existing scene and commit a new view after scrolling settles.
+
+Saved places and sightings remain in browser local storage, with JSON export/import. Bundled weather is refreshed with preparation scripts; a static host does not run a scheduler. See [AWS deployment](aws-static.md), [model and data](model-and-data.md) and [mobile loading](mobile-loading.md).
+
+## Preserved optional server implementation
+
+The sections below describe the retained server code, not the public deployment.
+
 > Current release: saved spots use browser local storage with JSON import/export. Account endpoints are retired (HTTP 410). Account implementation details below document the preserved legacy system, not an available user feature.
 
 

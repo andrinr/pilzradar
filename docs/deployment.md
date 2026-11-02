@@ -1,8 +1,10 @@
 # Deployment and operations
 
-[Back to shrooms](../README.md)
+[Back to Pilzradar](../README.md)
 
-## Choose static or a Swiss server
+The production site uses a static S3 + CloudFront deployment. Follow [the current AWS instructions](aws-static.md). The server options below are retained for development and future deployments.
+
+## Static deployment and optional servers
 
 Deploy `_site/` to GitHub Pages or another static host after `npm run build:static`. The map and browser notebook work without a backend. Saved spots stay in the current browser and origin; use Export / Import to transfer them. Clearing site data removes them. This build disables API discovery and hides sharing and account-request controls. External map tiles and manual browser weather refresh still work.
 
