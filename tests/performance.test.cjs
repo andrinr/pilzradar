@@ -13,7 +13,7 @@ test('worker cache invalidates when weather changes and preserves transferable s
  const cells=unpack('.','regions/ch/index').cells.slice(0,100),messages=[];
  const c={URL,performance,Float32Array,Map,Intl,Date,Math,Number,location:{href:'https://example.test/src/scoring-worker.js?v=test'},postMessage:m=>messages.push(m)};c.self=c;c.window=c;
  vm.createContext(c);c.importScripts=(...urls)=>urls.forEach(url=>vm.runInContext(fs.readFileSync('src/'+url.split('?')[0],'utf8'),c));vm.runInContext(fs.readFileSync('src/scoring-worker.js','utf8'),c);
- const points=[{id:'2600000:1200000'}],date='2026-09-23T12:00:00Z';c.onmessage({data:{type:'init',cells,points}});
+ const points=[{id:'2600000:1200000'}],date='2026-09-23T12:00:00Z';c.onmessage({data:{type:'init',cells:[],points}});for(let offset=0;offset<cells.length;offset+=32)c.onmessage({data:{type:'append',cells:cells.slice(offset,offset+32)}});
  const job={id:1,species:'porcini',date,weatherVersion:1,entries:[[0,{rain14:60,soil:.34,humidity:90,temp7:15}]],extra:[]};c.onmessage({data:job});
  const reference=messages[0].values.slice();c.onmessage({data:{...job,id:2}});assert.deepEqual(messages[1].values,reference);
  c.onmessage({data:{...job,id:3,weatherVersion:2,entries:[[0,{rain14:0,soil:.1,humidity:30,temp7:15}]]}});assert.ok(messages[2].values[0]<reference[0]);

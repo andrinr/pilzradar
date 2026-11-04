@@ -19,3 +19,11 @@ test('summary factors weight forest area and omit missing values rather than tre
  const result=adaptive.factors(cells,scores);assert.ok(Math.abs(result.tree-.7)<1e-10);assert.equal(result.moisture,null);
  scores.get('b').factors.tree.value=null;assert.ok(Math.abs(adaptive.factors(cells,scores).tree-.8)<1e-10);
 });
+test('cooperative overview grouping preserves cell order and yields to input',async()=>{
+ let ticks=0,yields=0;
+ const c={window:{},performance:{now:()=>++ticks*9},setTimeout:fn=>{yields++;return setTimeout(fn,0);}};
+ vm.runInNewContext(fs.readFileSync('src/adaptive.js','utf8'),c);
+ const cells=Array.from({length:1700},(_,i)=>({id:`${i%100}-${Math.floor(i/100)}`}));
+ for(const size of [500,1000])assert.deepEqual(JSON.parse(JSON.stringify(await c.window.SHROOMS_ADAPTIVE.groupAsync(cells,size))),JSON.parse(JSON.stringify(adaptive.group(cells,size))));
+ assert.ok(yields>0);
+});

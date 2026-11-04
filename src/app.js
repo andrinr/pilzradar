@@ -2,8 +2,19 @@
   const $=id=>document.getElementById(id);
   const locale=window.SHROOMS_I18N?.locale||'en-GB';
   const weatherSnapshot=window.SHROOMS_LOAD('national-weather').catch(()=>null);
-  const [catalog,manifest,forestOverview,data,basemap]=await Promise.all(['regions','habitat/index','overview-forest/index',window.SHROOMS_BINARY?'regions/ch/compact-index':'regions/ch/index','switzerland-map'].map(window.SHROOMS_LOAD));
+  // The geographic map must not wait for the national habitat payload or scoring.
+  const [catalog,manifest,basemap]=await Promise.all(['regions','habitat/index','switzerland-map'].map(window.SHROOMS_LOAD));
   const requested=new URLSearchParams(location.search).get('region')||'ch';
+  if(!window.L)throw new Error('Leaflet unavailable');
+  const earlyMap=L.map('map',{zoomControl:false,preferCanvas:true,zoomSnap:0,zoomDelta:.5,wheelDebounceTime:30,wheelPxPerZoomLevel:60,scrollWheelZoom:'center',touchZoom:'center'});
+  earlyMap.fitBounds(manifest.regions.find(r=>r.id===requested)?.bounds||basemap.bounds,{padding:[20,20]});
+  let basemapChange=null,basemapStatus=[true,false];
+  const tiledMap=window.SHROOMS_BASEMAP_TILES.mount(L,earlyMap,(...status)=>{basemapStatus=status;basemapChange?.(...status);});
+  tiledMap.mode(true);
+  window.SHROOMS_PERF.record('basemapStarted',performance.now());
+  // Yield so the browser can paint and dispatch tile requests before dataset setup.
+  await new Promise(resolve=>setTimeout(resolve,0));
+  const [forestOverview,data]=await Promise.all(['overview-forest/index',window.SHROOMS_BINARY?'regions/ch/compact-index':'regions/ch/index'].map(window.SHROOMS_LOAD));
   const region=catalog.regions.find(r=>r.id==='ch');
   const habitat=window.SHROOMS_HABITAT.create(manifest,window.SHROOMS_LOAD);
   window.SHROOMS_REGION='ch';window.SHROOMS_SEAMLESS=true;
@@ -21,7 +32,8 @@
   const national=true;
   const byId=new Map(cells.map(c=>[c.id,{type:"Feature",properties:c}]));
   let detailTiles;
-  const overviewGroups=new Map([500,1000].map(size=>[size,window.SHROOMS_ADAPTIVE.group(cells,size)]));
+  const overviewGroups=new Map();
+  for(const size of [500,1000])overviewGroups.set(size,await window.SHROOMS_ADAPTIVE.groupAsync(cells,size));
   const requestedSpecies=new URLSearchParams(location.search).get('species');
   const state={species:Object.hasOwn(species,requestedSpecies)?requestedSpecies:'all',selected:null,map:null,layer:null,selection:null,mode:'heat',weather:new Map(),scores:new Map(),status:'loading',search:'',updated:null};
   let rankedCells=[],baseRankedCells=[];
@@ -167,7 +179,7 @@
   }
   function initMap() {
     if(!window.L){$('map').innerHTML='<div class="map-error">The map could not load. Reload to try again.</div>';return;}
-    state.map=L.map('map',{zoomControl:false,preferCanvas:true,zoomSnap:0,zoomDelta:.5,wheelDebounceTime:30,wheelPxPerZoomLevel:60,scrollWheelZoom:'center',touchZoom:'center'}).setView([47.43,8.65],10);
+    state.map=earlyMap;
     const base=basemap;
     if(base){
       state.map.createPane('offlineBase').style.zIndex=190;
@@ -276,17 +288,17 @@
     state.overview.on('load',()=>{$('map').dataset.overviewReady='true';requestAnimationFrame(()=>requestAnimationFrame(()=>{if(window.SHROOMS_ADAPTIVE.resolution(state.map.getZoom())!==100&&!state.overview.isLoading()){state.map.removeLayer(state.layer);detailTiles.update([],()=>false);}}));if(state.navigationStart)window.SHROOMS_PERF.record('overviewReady',performance.now()-state.navigationStart);});
     state.map.on('movestart wheelzoomstart',()=>{state.detailReady=false;state.navigationStart=performance.now();clearTimeout(viewTimer);detailTiles.cancel();habitat.cancel();});
     window.SHROOMS_SMOOTH_ZOOM.attach(state.map);
-    state.map.on('moveend',()=>{clearTimeout(viewTimer);viewTimer=setTimeout(()=>{updateResolution();renderList();renderDetail();loadVisibleTiles();},100);});const initial=manifest.regions.find(r=>r.id===requested);if(initial)state.map.fitBounds(initial.bounds,{padding:[20,20]});else all();updateResolution();loadVisibleTiles();const firstVisible=rankedCells.find(c=>state.map.getBounds().contains([c.lat,c.lon]));if(firstVisible||state.selected)select(firstVisible?.id||state.selected,false);
-    const tiledMap=window.SHROOMS_BASEMAP_TILES.mount(L,state.map,(online,failed)=>{
+    state.map.on('moveend',()=>{clearTimeout(viewTimer);viewTimer=setTimeout(()=>{updateResolution();renderList();renderDetail();loadVisibleTiles();},100);});updateResolution();loadVisibleTiles();const firstVisible=rankedCells.find(c=>state.map.getBounds().contains([c.lat,c.lon]));if(firstVisible||state.selected)select(firstVisible?.id||state.selected,false);
+    basemapChange=(online,failed)=>{
       state.onlineMap=online;state.showOffline?.(!online);$('basemap-style').value=online?'online':'offline';
       $('map-orientation').disabled=!online;
       $('basemap-status').hidden=!failed;
       $('basemap-status').textContent=failed?'Online map unavailable. Showing the bundled map; select Swiss topo map to retry.':'';
       state.updateLabels?.();updateResolution();
-    });
+    };
+    basemapChange(...basemapStatus);
     $('basemap-style').addEventListener('change',()=>tiledMap.mode($('basemap-style').value==='online'));
     $('map-orientation').addEventListener('change',()=>tiledMap.overlays($('map-orientation').checked));
-    tiledMap.mode(true);
 
   }
   function updateResolution() {

@@ -11,6 +11,20 @@
     }
     return [...groups.values()];
   }
+  async function groupAsync(cells,meters){
+    const groups=new Map(),step=meters/50;
+    let started=performance.now();
+    for(let i=0;i<cells.length;i++){
+      const cell=cells[i],[row,col]=cell.id.split('-').map(Number);
+      const key=`${Math.floor(row/step)}-${Math.floor(col/step)}`;
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(cell);
+      if(i%256===255&&performance.now()-started>=8){
+        await new Promise(resolve=>setTimeout(resolve,0));started=performance.now();
+      }
+    }
+    return [...groups.values()];
+  }
   function summarize(cells,scores){
     const area=cells.reduce((sum,c)=>sum+c.area,0);
     const mean=fn=>cells.reduce((sum,c)=>sum+fn(c)*c.area,0)/area;
@@ -24,5 +38,5 @@
       return [key,area?sum/area:null];
     }));
   }
-  window.SHROOMS_ADAPTIVE={resolution,group,summarize,factors};
+  window.SHROOMS_ADAPTIVE={resolution,group,groupAsync,summarize,factors};
 })();

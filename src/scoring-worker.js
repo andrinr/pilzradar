@@ -7,6 +7,7 @@ self.onmessage=({data})=>{
  const started=performance.now();
  try{
   if(data.type==='init'){cells=data.cells;points=data.points;return;}
+  if(data.type==='append'){for(const cell of data.cells)cells.push(cell);return;}
   if(dateKey!==data.date){cache.clear();dateKey=data.date;}
   if(weatherVersion!==data.weatherVersion){
    cache.clear();
